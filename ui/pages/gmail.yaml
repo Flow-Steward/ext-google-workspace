@@ -1,0 +1,22 @@
+page_id: gmail
+title: Gmail
+description: Connect Google accounts and manage Gmail access for this project.
+components:
+  - component_id: gmail_oauth_connections
+    type: connection_form
+    title: Gmail accounts
+    description: Add independently authorized Gmail accounts for this project.
+    data:
+      oauth_provider_id: workspace_oauth
+      connection_type: google_gmail_account
+      oauth_intent: gmail_connect
+      test_action: test_connection
+  - component_id: gmail_before_connect
+    type: markdown
+    title: Before you connect
+    body: |
+      **Before you connect**
+
+      A Flow Steward project administrator configures the OAuth app and enables Gmail API. The Google account owner then clicks Connect and approves `gmail.modify` on Google's consent screen.
+
+      This permission lets Flow Steward read mail, download attachments, change supported flags and labels, and move messages to Trash. It does not permanently delete mail. Open the Setup guide tab for administrator and Google Workspace policy steps.

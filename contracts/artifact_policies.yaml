@@ -1,0 +1,19 @@
+artifact_policies:
+  - operation_id: get_attachment
+    outputs:
+      - {kind: artifact, value_type: artifact_handle, binding_key: attachment_artifact_handle, filename: gmail-attachment.bin, content_type: application/octet-stream, max_size_bytes: 20971520, retention_class: run_window}
+  - operation_id: download_drive_file
+    outputs:
+      - {kind: artifact, value_type: artifact_handle, binding_key: drive_download_artifact, filename: drive-download.bin, content_type: application/octet-stream, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES, retention_class: run_window}
+  - operation_id: upload_drive_file
+    inputs:
+      - {kind: artifact, value_type: artifact_handle, binding_key: drive_upload_artifact, from_input: artifact_handle, max_size_bytes: 209715200, max_size_env: FS_EXTENSION_ARTIFACT_MAX_BYTES}
+  - operation_id: read_google_sheet
+    outputs:
+      - {kind: dataset, value_type: dataset_handle, binding_key: google_sheet_dataset, content_type: application/x-ndjson, max_size_bytes: 209715200, retention_class: run_window}
+  - operation_id: write_google_sheet
+    inputs:
+      - {kind: dataset, value_type: dataset_handle, binding_key: google_sheet_input_dataset, from_input: dataset_handle, required: false, content_type: application/x-ndjson, max_size_bytes: 209715200}
+  - operation_id: append_google_sheet_rows
+    inputs:
+      - {kind: dataset, value_type: dataset_handle, binding_key: google_sheet_input_dataset, from_input: dataset_handle, required: false, content_type: application/x-ndjson, max_size_bytes: 209715200}

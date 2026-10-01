@@ -1,0 +1,199 @@
+forms:
+  - {operation_id: test_connection, title: Test Gmail connection, fields: []}
+  - {operation_id: list_labels, title: List Gmail labels, fields: []}
+  - operation_id: search_messages
+    title: Search Gmail messages
+    fields: [{name: label_id, widget_type: resource_picker, resource_query_id: gmail_labels, required: true}, {name: filters, widget_type: json}, {name: limit, widget_type: number}, {name: cursor, widget_type: text}]
+  - operation_id: get_message
+    title: Get Gmail message
+    fields: [{name: message_id, widget_type: text, required: true}, {name: include_body, widget_type: boolean}, {name: include_headers, widget_type: boolean}, {name: include_attachment_metadata, widget_type: boolean}, {name: include_raw_html, widget_type: boolean}]
+  - operation_id: get_attachment
+    title: Get Gmail attachment
+    fields: [{name: message_id, widget_type: text, required: true}, {name: attachment_id, widget_type: text, required: true}]
+  - operation_id: set_message_flags
+    title: Set Gmail message flags
+    fields: [{name: message_ids, widget_type: json, required: true}, {name: seen, widget_type: boolean}, {name: flagged, widget_type: boolean}]
+  - operation_id: move_messages
+    title: Move Gmail messages
+    fields: [{name: message_ids, widget_type: json, required: true}, {name: source_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true}, {name: target_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true}]
+  - operation_id: delete_messages
+    title: Move Gmail messages to Trash
+    fields: [{name: message_ids, widget_type: json, required: true}]
+  - operation_id: search_drive_files
+    title: Search Google Drive files
+    fields:
+      - name: parent_folder_id
+        widget_type: resource_picker
+        resource_query_id: google_drive_folders
+        label: Parent folder
+        help_text: Select with Google Picker or map an upstream folder ID.
+        external_resource_picker:
+          allowed_script_origins: &google_picker_script_origins [https://accounts.google.com, https://apis.google.com]
+          allowed_connect_origins: &google_picker_connect_origins [https://accounts.google.com, https://www.googleapis.com]
+          allowed_frame_origins: &google_picker_frame_origins [https://accounts.google.com, https://docs.google.com]
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose folder with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected folder. Reopen it and try again.
+          options: {resource_kind: folder}
+          scripts: &google_picker_scripts
+            - {src: https://accounts.google.com/gsi/client}
+            - {src: https://apis.google.com/js/api.js}
+            - {asset_ref: assets/google-picker-bridge.js}
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: parent_folder_id, required: true, max_length: 1024}]}
+      - {name: name, widget_type: text, label: Name contains}
+      - {name: name_match, widget_type: select, label: Name match, options: [{label: Contains, value: contains}, {label: Exact, value: exact}]}
+      - {name: mime_types, widget_type: json, label: MIME types}
+      - {name: modified_after, widget_type: datetime, label: Modified after}
+      - {name: modified_before, widget_type: datetime, label: Modified before}
+      - {name: trashed, widget_type: boolean, label: Include only trashed files}
+      - {name: sort, widget_type: select, label: Sort, options: [{label: Provider order, value: provider_order}, {label: Name ascending, value: name_asc}, {label: Modified newest first, value: modified_time_desc}]}
+      - {name: limit, widget_type: number, label: Limit}
+      - {name: cursor, widget_type: text, label: Cursor, help_text: Map only a cursor returned by this operation with the same filters.}
+  - operation_id: download_drive_file
+    title: Download Google Drive file
+    fields:
+      - name: file_id
+        widget_type: resource_picker
+        resource_query_id: google_drive_files
+        label: Drive file (required)
+        required: true
+        help_text: Select with Google Picker or map an upstream file ID.
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose file with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected file. Reopen it and try again.
+          options: {resource_kind: file}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: file_id, required: true, max_length: 1024}]}
+      - {name: export_mime_type, widget_type: select, label: Native export format, options: [{label: PDF, value: application/pdf}, {label: Excel workbook, value: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet}]}
+  - operation_id: upload_drive_file
+    title: Upload file to Google Drive
+    fields:
+      - {name: artifact_handle, widget_type: artifact_picker, label: Input artifact (required), required: true}
+      - name: destination_folder_id
+        widget_type: resource_picker
+        resource_query_id: google_drive_folders
+        label: Destination folder (required)
+        required: true
+        help_text: Select a folder with Google Picker or map an upstream folder ID.
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose folder with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected folder. Reopen it and try again.
+          options: {resource_kind: folder}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: destination_folder_id, required: true, max_length: 1024}]}
+      - {name: filename, widget_type: text, label: Filename (required), required: true}
+  - operation_id: read_google_sheet
+    title: Read Google Sheet
+    fields:
+      - name: spreadsheet_id
+        widget_type: resource_picker
+        resource_query_id: google_spreadsheets
+        label: Spreadsheet (required)
+        required: true
+        help_text: Select with Google Picker or map an upstream spreadsheet ID.
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose spreadsheet with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected spreadsheet. Reopen it and try again.
+          options: {resource_kind: spreadsheet}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
+      - {name: sheet_id, widget_type: number, label: Sheet ID, help_text: Enter exactly one of Sheet ID or Sheet title.}
+      - {name: sheet_title, widget_type: text, label: Sheet title, help_text: Enter exactly one of Sheet ID or Sheet title.}
+      - {name: range, widget_type: text, label: Relative A1 range}
+      - {name: header_mode, widget_type: select, label: Header mode, options: [{label: First row, value: first_row}, {label: No header, value: none}]}
+  - operation_id: write_google_sheet
+    title: Write Google Sheet
+    fields:
+      - {name: mode, widget_type: select, label: Mode (required), required: true, options: [{label: Create spreadsheet, value: create}, {label: Overwrite selected sheet range, value: overwrite}]}
+      - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
+      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows.}
+      - {name: start_cell, widget_type: text, label: Start cell}
+      - {name: spreadsheet_title, widget_type: text, label: New spreadsheet title, depends_on: {mode: create}}
+      - name: destination_folder_id
+        widget_type: resource_picker
+        resource_query_id: google_drive_folders
+        label: Destination folder
+        depends_on: {mode: create}
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose folder with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected folder. Reopen it and try again.
+          options: {resource_kind: folder}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: destination_folder_id, required: true, max_length: 1024}]}
+      - name: spreadsheet_id
+        widget_type: resource_picker
+        resource_query_id: google_spreadsheets
+        label: Spreadsheet
+        depends_on: {mode: overwrite}
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose spreadsheet with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected spreadsheet. Reopen it and try again.
+          options: {resource_kind: spreadsheet}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
+      - {name: sheet_id, widget_type: number, label: Sheet ID, depends_on: {mode: overwrite}}
+      - {name: sheet_title, widget_type: text, label: Sheet title, depends_on: {mode: overwrite}}
+  - operation_id: append_google_sheet_rows
+    title: Append Google Sheet rows
+    fields:
+      - name: spreadsheet_id
+        widget_type: resource_picker
+        resource_query_id: google_spreadsheets
+        label: Spreadsheet (required)
+        required: true
+        external_resource_picker:
+          allowed_script_origins: *google_picker_script_origins
+          allowed_connect_origins: *google_picker_connect_origins
+          allowed_frame_origins: *google_picker_frame_origins
+          bootstrap_action_id: get_picker_bootstrap
+          bridge_global: FlowStewardGoogleWorkspacePicker
+          button_label: Choose spreadsheet with Google Picker
+          busy_label: Opening Google Picker…
+          error_message: Google Picker could not apply the selected spreadsheet. Reopen it and try again.
+          options: {resource_kind: spreadsheet}
+          scripts: *google_picker_scripts
+          target_component_id: workflow_parameter_form
+          selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
+      - {name: sheet_id, widget_type: number, label: Sheet ID, help_text: Enter exactly one of Sheet ID or Sheet title.}
+      - {name: sheet_title, widget_type: text, label: Sheet title, help_text: Enter exactly one of Sheet ID or Sheet title.}
+      - {name: table_range, widget_type: text, label: Table range (required), required: true}
+      - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
+      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows.}

@@ -1,0 +1,21 @@
+{
+  "common": {
+    "allowed_script_origins": ["https://accounts.google.com", "https://apis.google.com"],
+    "allowed_connect_origins": ["https://accounts.google.com", "https://www.googleapis.com"],
+    "allowed_frame_origins": ["https://accounts.google.com", "https://docs.google.com"],
+    "bootstrap_action_id": "get_picker_bootstrap",
+    "bridge_global": "FlowStewardGoogleWorkspacePicker",
+    "busy_label": "Opening Google Picker…",
+    "scripts": [{"src": "https://accounts.google.com/gsi/client"}, {"src": "https://apis.google.com/js/api.js"}, {"asset_ref": "assets/google-picker-bridge.js"}],
+    "target_component_id": "workflow_parameter_form"
+  },
+  "cases": [
+    {"operation_id": "search_drive_files", "field_name": "parent_folder_id", "button_label": "Choose folder with Google Picker", "error_message": "Google Picker could not apply the selected folder. Reopen it and try again.", "resource_kind": "folder"},
+    {"operation_id": "download_drive_file", "field_name": "file_id", "button_label": "Choose file with Google Picker", "error_message": "Google Picker could not apply the selected file. Reopen it and try again.", "resource_kind": "file"},
+    {"operation_id": "upload_drive_file", "field_name": "destination_folder_id", "button_label": "Choose folder with Google Picker", "error_message": "Google Picker could not apply the selected folder. Reopen it and try again.", "resource_kind": "folder"},
+    {"operation_id": "read_google_sheet", "field_name": "spreadsheet_id", "button_label": "Choose spreadsheet with Google Picker", "error_message": "Google Picker could not apply the selected spreadsheet. Reopen it and try again.", "resource_kind": "spreadsheet"},
+    {"operation_id": "write_google_sheet", "field_name": "destination_folder_id", "button_label": "Choose folder with Google Picker", "error_message": "Google Picker could not apply the selected folder. Reopen it and try again.", "resource_kind": "folder"},
+    {"operation_id": "write_google_sheet", "field_name": "spreadsheet_id", "button_label": "Choose spreadsheet with Google Picker", "error_message": "Google Picker could not apply the selected spreadsheet. Reopen it and try again.", "resource_kind": "spreadsheet"},
+    {"operation_id": "append_google_sheet_rows", "field_name": "spreadsheet_id", "button_label": "Choose spreadsheet with Google Picker", "error_message": "Google Picker could not apply the selected spreadsheet. Reopen it and try again.", "resource_kind": "spreadsheet"}
+  ]
+}

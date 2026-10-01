@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "patterns": [
+    {"rule": "provider_token", "needles": ["ya29"], "regex": "\\bya29\\."},
+    {"rule": "provider_module", "needles": ["google"], "regex": "\\bgoogle[\\s._-]*(?:oauth|gmail|drive|sheets?|picker)(?=$|[\\s._-])"},
+    {"rule": "provider_namespace", "needles": ["google"], "regex": "(?:flowsteward[._-])?google[._-]workspace"},
+    {"rule": "provider_id", "needles": ["workspace"], "regex": "workspace[\\s._-]*oauth"},
+    {"rule": "provider_identity_field", "needles": ["provider_id"], "regex": "(?:(?:\"provider_id\"|'provider_id'|\\bprovider_id\\b)\\s*(?::\\s*[A-Za-z_][A-Za-z0-9_.\\[\\], |]*\\s*=|[:=])\\s*(?:\\(\\s*(?:[rRuUbBfF]{0,2}(?P<q1>[\"'])google(?P=q1)|`google`|google)\\s*\\)|(?:[rRuUbBfF]{0,2}(?P<q2>[\"'])google(?P=q2)|`google`|google)))(?=$|[\\s,;}])"},
+    {"rule": "connection_type", "needles": ["google"], "regex": "google[\\s._-]*(?:gmail|drive|sheets)[\\s._-]*account"},
+    {"rule": "provider_endpoint", "needles": ["google"], "regex": "(?:accounts\\.google\\.com|oauth2\\.googleapis\\.com)"},
+    {"rule": "provider_scope", "needles": ["googleapis"], "regex": "googleapis\\.com/auth/(?:gmail|drive|spreadsheets?)"},
+    {"rule": "provider_intent", "needles": ["gmail_"], "regex": "\\bgmail_(?:connect|account)\\b"},
+    {"rule": "provider_copy", "needles": ["picker"], "regex": "picker browser origin"}
+  ]
+}

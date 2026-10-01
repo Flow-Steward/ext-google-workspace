@@ -1,0 +1,57 @@
+page_id: setup-guide
+title: Setup guide
+description: Configure the shared Google Cloud application and understand each authorization boundary.
+project_scoped: true
+components:
+  - component_id: google_workspace_setup_guide
+    type: markdown
+    title: Google Workspace setup guide
+    body: |
+      **Before you connect**
+
+      Three separate approvals can be involved. A Flow Steward project administrator configures the project-scoped Google Cloud application. A Google Workspace organization administrator may allow or block that application for a managed domain. The Google account owner grants the scopes shown on Google's consent screen. Personal `gmail.com` users can create their own Web application client and do not need a Workspace administrator. Enabling an API does not grant access to a user's mail or files.
+
+      **Shared Google OAuth application**
+
+      Configure one OAuth consent screen and one Web application client. Add the exact Flow Steward callback URI shown on this extension's Setup tab as an authorized redirect URI. Save Client ID and Client Secret in this extension's project-scoped Setup form. Picker key, App ID, and browser origin are optional and required only for Drive and Sheets Picker shortcuts. The Picker key is browser-visible non-secret configuration, so restrict it to Picker API and the listed HTTPS origin in Google Cloud. Internal and External apps, test users, verification, and restricted-scope requirements still follow Google's policies.
+
+      [Configure OAuth consent](https://developers.google.com/workspace/guides/configure-oauth-consent)
+
+      [OAuth 2.0 web-server flow](https://developers.google.com/identity/protocols/oauth2/web-server)
+
+      [Google Cloud API Library](https://console.cloud.google.com/apis/library)
+
+      **Gmail**
+
+      Enable Gmail API. The `gmail_connect` flow requests `gmail.modify` only for Gmail. A Workspace administrator may need to approve the app for a managed domain.
+
+      [Gmail OAuth scopes](https://developers.google.com/workspace/gmail/api/auth/scopes)
+
+      **Google Drive**
+
+      Enable Drive API and Picker API. Restrict the browser-visible non-secret API key to Picker API and the exact HTTPS origin, and enter the numeric Google Cloud project number as Picker App ID. The separate `drive_connect` flow requests only `drive.file`; access is limited to app-created and explicitly selected resources.
+
+      [Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)
+
+      [Picker setup](https://developers.google.com/workspace/drive/picker/guides/web-picker)
+
+      **Google Sheets**
+
+      Enable Sheets API, Drive API, and Picker API. Reuse the same restricted Picker key and App ID. The separate `sheets_connect` flow uses `drive.file`, not the broader `spreadsheets` scope; spreadsheets must be app-created or explicitly selected.
+
+      [Sheets scopes](https://developers.google.com/workspace/sheets/api/scopes)
+  - component_id: google_oauth_client_credentials_help
+    anchor_id: client-credentials
+    type: markdown
+    title: Client credentials
+    content: Verify that the Web application Client ID and Client Secret come from the same Google Cloud OAuth client and that the exact callback URI is authorized.
+  - component_id: google_oauth_authorize_again_help
+    anchor_id: authorize-again
+    type: markdown
+    title: Authorize again
+    content: Reconnect the selected service and approve only the scope shown for its Gmail, Drive, or Sheets consent flow.
+  - component_id: google_api_setup_help
+    anchor_id: google-api-setup
+    type: markdown
+    title: Google API setup
+    content: Confirm that Gmail API, Drive API, Sheets API, and Picker API are enabled for the configured Google Cloud project.

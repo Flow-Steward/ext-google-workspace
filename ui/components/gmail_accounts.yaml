@@ -1,0 +1,17 @@
+component_id: google_workspace_accounts
+type: connection_form
+title: Gmail accounts
+description: Add independent Gmail accounts and select each one explicitly in workflows.
+data:
+  connection_kind: extension
+  connection_type: google_gmail_account
+  config_fields: []
+  secret_fields: []
+  required_secret_fields: []
+  tags: [google, gmail, email]
+defaults:
+  display_name: Gmail account
+fields:
+  - path: display_name
+    label: Display name
+    widget: text

@@ -1,0 +1,158 @@
+actions:
+  - action_id: verify_google_identity
+    title: Verify Google account identity
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: false
+    parameters: []
+    result_fields: [subject, verified_display_name, verified_email, safe_metadata, health]
+    error_codes: [invalid_payload, provider_unavailable]
+  - action_id: get_picker_bootstrap
+    title: Prepare Google Picker
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: false
+    parameters: []
+    result_fields: [client_id, developer_key, app_id, origin, email_hint, scope]
+    error_codes: [invalid_payload, provider_unavailable]
+  - action_id: test_connection
+    title: Test Gmail connection
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}]
+    result_fields: [email_address, messages_total, threads_total, history_id]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, mailbox_unusable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+  - action_id: list_labels
+    title: List Gmail labels
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}]
+    result_fields: [labels]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_list_too_large, response_too_large, internal_error]
+  - action_id: search_messages
+    title: Search Gmail messages
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: label_id, type: string, required: true}, {name: filters, type: object, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+    result_fields: [messages, next_cursor, truncated]
+    error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+  - action_id: get_message
+    title: Get Gmail message
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: include_body, type: boolean, required: false}, {name: include_headers, type: boolean, required: false}, {name: include_attachment_metadata, type: boolean, required: false}, {name: include_raw_html, type: boolean, required: false}]
+    result_fields: [message]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, message_too_large, message_too_complex, response_too_large, internal_error]
+  - action_id: get_attachment
+    title: Get Gmail attachment
+    required_scopes: [extension:invoke, artifact:write]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: attachment_id, type: string, required: true}]
+    result_fields: [attachment_artifact_handle, attachment_metadata]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, attachment_not_found, attachment_too_large, attachment_type_disallowed, artifact_output_unavailable, response_too_large, internal_error]
+  - action_id: set_message_flags
+    title: Set Gmail message flags
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: seen, type: boolean, required: false}, {name: flagged, type: boolean, required: false}]
+    result_fields: [results, external_effect_status, definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+  - action_id: move_messages
+    title: Move Gmail messages
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: source_label_id, type: string, required: true}, {name: target_label_id, type: string, required: true}]
+    result_fields: [results, external_effect_status, definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_not_found, label_ineligible, timeout_unknown, internal_error]
+  - action_id: delete_messages
+    title: Move Gmail messages to Trash
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}]
+    result_fields: [results, external_effect_status, definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, timeout_unknown, internal_error]
+  - action_id: search_drive_files
+    title: Search Google Drive files
+    required_scopes: [extension:invoke]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: parent_folder_id, type: string, required: false}, {name: name, type: string, required: false}, {name: name_match, type: string, required: false}, {name: mime_types, type: array, required: false}, {name: modified_after, type: string, required: false}, {name: modified_before, type: string, required: false}, {name: trashed, type: boolean, required: false}, {name: sort, type: string, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+    result_fields: [files, next_cursor]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, network_failure, provider_unavailable, response_too_large, internal_error]
+  - action_id: download_drive_file
+    title: Download Google Drive file
+    required_scopes: [extension:invoke, artifact:write]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: file_id, type: string, required: true}, {name: export_mime_type, type: string, required: false}]
+    result_fields: [artifact_handle, filename, mime_type, size, sha256, file_id, modified_time]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_resource_not_available_to_connection, google_unsupported_export, drive_file_too_large, artifact_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+  - action_id: upload_drive_file
+    title: Upload file to Google Drive
+    required_scopes: [extension:invoke, artifact:read]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: artifact_handle, type: artifact_handle, required: true}, {name: destination_folder_id, type: string, required: true}, {name: filename, type: string, required: true}]
+    result_fields: [file_id, name, mime_type, size, web_view_link]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, google_write_incomplete, drive_file_too_large, artifact_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+  - action_id: read_google_sheet
+    title: Read Google Sheet
+    required_scopes: [extension:invoke, artifact:write]
+    handler: {mode: extension}
+    mutates_platform: false
+    workflow_visible: true
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: range, type: string, required: false}, {name: header_mode, type: string, required: false}]
+    result_fields: [dataset_handle, row_count, column_count, schema, preview, spreadsheet_id, sheet_id]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+  - action_id: write_google_sheet
+    title: Write Google Sheet
+    required_scopes: [extension:invoke, artifact:read]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: mode, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}, {name: start_cell, type: string, required: false}, {name: spreadsheet_title, type: string, required: false}, {name: destination_folder_id, type: string, required: false}, {name: spreadsheet_id, type: string, required: false}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}]
+    result_fields: [spreadsheet_id, sheet_id, web_view_link, row_count, column_count]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+  - action_id: append_google_sheet_rows
+    title: Append Google Sheet rows
+    required_scopes: [extension:invoke, artifact:read]
+    handler: {mode: extension}
+    command_type: invoke_extension_action
+    mutates_platform: true
+    workflow_visible: true
+    test_mode_behavior: suppress
+    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: table_range, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}]
+    contract: {serialization: {key_fields: [spreadsheet_id]}}
+    result_fields: [spreadsheet_id, sheet_id, appended_range, row_count, column_count]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]

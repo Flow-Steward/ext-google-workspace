@@ -1,0 +1,251 @@
+operations:
+  - operation_id: test_connection
+    display_name: Test Gmail connection
+    operation_kind: source
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}]
+    outputs: [{name: email_address, value_type: text}, {name: messages_total, value_type: integer}, {name: threads_total, value_type: integer}, {name: history_id, value_type: text}]
+    result_fields: [result.email_address, result.messages_total, result.threads_total, result.history_id]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, mailbox_unusable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+  - operation_id: list_labels
+    display_name: List Gmail labels
+    operation_kind: source
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}]
+    outputs: [{name: labels, value_type: array}]
+    result_fields: [result.labels]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_list_too_large, response_too_large, internal_error]
+  - operation_id: search_messages
+    display_name: Search Gmail messages
+    operation_kind: source
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: label_id, value_type: text, required: true}, {name: filters, value_type: object, required: false}, {name: limit, value_type: integer, required: false}, {name: cursor, value_type: text, required: false}]
+    outputs: [{name: messages, value_type: array}, {name: next_cursor, value_type: text}, {name: truncated, value_type: boolean}]
+    result_fields: [result.messages, result.next_cursor, result.truncated]
+    error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+  - operation_id: get_message
+    display_name: Get Gmail message
+    operation_kind: source
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true}, {name: include_body, value_type: boolean, required: false}, {name: include_headers, value_type: boolean, required: false}, {name: include_attachment_metadata, value_type: boolean, required: false}, {name: include_raw_html, value_type: boolean, required: false}]
+    outputs: [{name: message, value_type: object}]
+    result_fields: [result.message]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, message_too_large, message_too_complex, response_too_large, internal_error]
+  - operation_id: get_attachment
+    display_name: Get Gmail attachment
+    operation_kind: source
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true}, {name: attachment_id, value_type: text, required: true}]
+    outputs: [{name: attachment_artifact_handle, value_type: artifact_handle}, {name: attachment_metadata, value_type: object}]
+    result_fields: [result.attachment_artifact_handle, result.attachment_metadata]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, attachment_not_found, attachment_too_large, attachment_type_disallowed, artifact_output_unavailable, response_too_large, internal_error]
+  - operation_id: set_message_flags
+    display_name: Set Gmail message flags
+    operation_kind: action
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}, {name: seen, value_type: boolean, required: false}, {name: flagged, value_type: boolean, required: false}]
+    outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
+    result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+  - operation_id: move_messages
+    display_name: Move Gmail messages
+    operation_kind: action
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}, {name: source_label_id, value_type: text, required: true}, {name: target_label_id, value_type: text, required: true}]
+    outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
+    result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_not_found, label_ineligible, timeout_unknown, internal_error]
+  - operation_id: delete_messages
+    display_name: Move Gmail messages to Trash
+    operation_kind: action
+    category: email
+    connection_type_ids: [google_gmail_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}]
+    outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
+    result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
+    error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, timeout_unknown, internal_error]
+  - operation_id: search_drive_files
+    display_name: Search Google Drive files
+    description: Search the app-visible Drive corpus with bounded typed filters and a filter-bound cursor.
+    operation_kind: source
+    category: file_transfer
+    connection_type_ids: [google_drive_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: parent_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: name, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
+      - {name: name_match, value_type: text, required: false, schema: {type: string, enum: [exact, contains], default: contains}}
+      - name: mime_types
+        value_type: array
+        required: false
+        schema: {type: array, minItems: 1, maxItems: 20, items: {type: string, minLength: 1, maxLength: 255}}
+      - {name: modified_after, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
+      - {name: modified_before, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
+      - {name: trashed, value_type: boolean, required: false, schema: {type: boolean, default: false}}
+      - {name: sort, value_type: text, required: false, schema: {type: string, enum: [provider_order, name_asc, modified_time_desc], default: provider_order}}
+      - {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+      - {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 8192}}
+    outputs:
+      - name: files
+        value_type: array
+        schema:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [file_id, name, mime_type, size, modified_time, web_view_link, is_folder]
+            properties:
+              file_id: {type: string}
+              name: {type: string}
+              mime_type: {type: string}
+              size: {type: [integer, "null"]}
+              modified_time: {type: [string, "null"]}
+              web_view_link: {type: [string, "null"]}
+              is_folder: {type: boolean}
+      - {name: next_cursor, value_type: text, schema: {type: [string, "null"], maxLength: 8192}}
+    result_fields: [result.files, result.next_cursor]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, network_failure, provider_unavailable, response_too_large, internal_error]
+  - operation_id: download_drive_file
+    display_name: Download Google Drive file
+    description: Stream one selected Drive file or explicit supported native export into an artifact grant.
+    operation_kind: source
+    category: file_transfer
+    connection_type_ids: [google_drive_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: file_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: export_mime_type, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
+    outputs:
+      - {name: artifact_handle, value_type: artifact_handle}
+      - {name: filename, value_type: text}
+      - {name: mime_type, value_type: text}
+      - {name: size, value_type: integer}
+      - {name: sha256, value_type: text, schema: {type: [string, "null"]}}
+      - {name: file_id, value_type: text}
+      - {name: modified_time, value_type: text, schema: {type: [string, "null"]}}
+    result_fields: [result.artifact_handle, result.filename, result.mime_type, result.size, result.sha256, result.file_id, result.modified_time]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_resource_not_available_to_connection, google_unsupported_export, drive_file_too_large, artifact_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+  - operation_id: upload_drive_file
+    display_name: Upload file to Google Drive
+    description: Stream an owned artifact into one Picker-authorized Drive folder.
+    operation_kind: action
+    category: file_transfer
+    connection_type_ids: [google_drive_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: artifact_handle, value_type: artifact_handle, required: true}
+      - {name: destination_folder_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: filename, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+    outputs:
+      - {name: file_id, value_type: text}
+      - {name: name, value_type: text}
+      - {name: mime_type, value_type: text}
+      - {name: size, value_type: integer}
+      - {name: web_view_link, value_type: text, schema: {type: [string, "null"]}}
+    result_fields: [result.file_id, result.name, result.mime_type, result.size, result.web_view_link]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, google_write_incomplete, drive_file_too_large, artifact_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+  - operation_id: read_google_sheet
+    display_name: Read Google Sheet
+    description: Stream one selected sheet range into a bounded NDJSON dataset grant.
+    operation_kind: source
+    category: spreadsheet
+    connection_type_ids: [google_sheets_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: spreadsheet_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
+      - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
+      - {name: range, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: header_mode, value_type: text, required: false, schema: {type: string, enum: [first_row, none], default: first_row}}
+    outputs:
+      - {name: dataset_handle, value_type: dataset_handle}
+      - {name: row_count, value_type: integer}
+      - {name: column_count, value_type: integer}
+      - name: schema
+        value_type: array
+        schema:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [name, type, nullable]
+            properties: {name: {type: string}, type: {type: string, const: string}, nullable: {type: boolean, const: true}}
+      - {name: preview, value_type: array, schema: {type: array, maxItems: 100}}
+      - {name: spreadsheet_id, value_type: text}
+      - {name: sheet_id, value_type: integer}
+    result_fields: [result.dataset_handle, result.row_count, result.column_count, result.schema, result.preview, result.spreadsheet_id, result.sheet_id]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+  - operation_id: write_google_sheet
+    display_name: Write Google Sheet
+    description: Create a spreadsheet or overwrite one selected sheet rectangle with RAW values.
+    operation_kind: action
+    category: spreadsheet
+    connection_type_ids: [google_sheets_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: mode, value_type: text, required: true, schema: {type: string, enum: [create, overwrite]}}
+      - {name: dataset_handle, value_type: dataset_handle, required: false}
+      - name: inline_rows
+        value_type: array
+        required: false
+        schema: {type: array, maxItems: 100, items: {type: array, maxItems: 100, items: {type: [string, number, boolean, "null"], maxLength: 50000}}}
+      - {name: start_cell, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512, default: A1}}
+      - {name: spreadsheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
+      - {name: destination_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: spreadsheet_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
+      - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
+    outputs:
+      - {name: spreadsheet_id, value_type: text}
+      - {name: sheet_id, value_type: integer}
+      - {name: web_view_link, value_type: text, schema: {type: [string, "null"]}}
+      - {name: row_count, value_type: integer}
+      - {name: column_count, value_type: integer}
+    result_fields: [result.spreadsheet_id, result.sheet_id, result.web_view_link, result.row_count, result.column_count]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+  - operation_id: append_google_sheet_rows
+    display_name: Append Google Sheet rows
+    description: Append RAW rows after one selected logical table using a stable chunk marker.
+    operation_kind: action
+    category: spreadsheet
+    connection_type_ids: [google_sheets_account]
+    required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
+    inputs:
+      - {name: connection_ref, value_type: connection_ref, required: true}
+      - {name: spreadsheet_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
+      - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
+      - {name: table_range, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: dataset_handle, value_type: dataset_handle, required: false}
+      - name: inline_rows
+        value_type: array
+        required: false
+        schema: {type: array, maxItems: 100, items: {type: array, maxItems: 100, items: {type: [string, number, boolean, "null"], maxLength: 50000}}}
+    outputs:
+      - {name: spreadsheet_id, value_type: text}
+      - {name: sheet_id, value_type: integer}
+      - {name: appended_range, value_type: text}
+      - {name: row_count, value_type: integer}
+      - {name: column_count, value_type: integer}
+    result_fields: [result.spreadsheet_id, result.sheet_id, result.appended_range, result.row_count, result.column_count]
+    error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]

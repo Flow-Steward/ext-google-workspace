@@ -1,0 +1,46 @@
+connection_types:
+  - connection_type_id: google_gmail_account
+    display_name: Gmail account
+    description: One Gmail account authorized only for Gmail operations in this project.
+    auth:
+      type: oauth2
+      provider_id: workspace_oauth
+      scopes:
+        required: [openid, https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/gmail.modify]
+        optional: []
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [test_connection, list_labels, search_messages, get_message, get_attachment, set_message_flags, move_messages, delete_messages]
+  - connection_type_id: google_drive_account
+    display_name: Google Drive account
+    description: One Google account authorized only for Drive operations in this project.
+    auth:
+      type: oauth2
+      provider_id: workspace_oauth
+      scopes:
+        required: [openid, https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/drive.file]
+        optional: []
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [search_drive_files, download_drive_file, upload_drive_file]
+  - connection_type_id: google_sheets_account
+    display_name: Google Sheets account
+    description: One Google account authorized only for Sheets operations in this project.
+    auth:
+      type: oauth2
+      provider_id: workspace_oauth
+      scopes:
+        required: [openid, https://www.googleapis.com/auth/userinfo.email, https://www.googleapis.com/auth/drive.file]
+        optional: []
+    config_schema: {type: object, additionalProperties: false, properties: {}}
+    secret_schema:
+      type: object
+      additionalProperties: false
+      properties: {access_token: {type: string}}
+    capabilities: [read_google_sheet, write_google_sheet, append_google_sheet_rows]

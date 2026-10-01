@@ -1,0 +1,8 @@
+{
+  "cleanup_sql": "docs/operations/one-off/reset-obsolete-google-oauth-provider.sql",
+  "provider_key": "google_workspace",
+  "extension_id": "flowsteward.google-workspace",
+  "connection_type": "google_workspace_account",
+  "obsolete_migration_id": "20260825090000_google_workspace_provider.sql",
+  "protected_migration_id": "20260826193000_backfill_google_workflow_install_identity.sql"
+}

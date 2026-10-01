@@ -1,0 +1,21 @@
+page_id: sheets
+title: Sheets
+description: Enable bounded spreadsheet access and select resources with Google Picker.
+components:
+  - component_id: sheets_oauth_connections
+    type: connection_form
+    title: Google Sheets accounts
+    description: Add independently authorized Sheets accounts for this project.
+    data:
+      oauth_provider_id: workspace_oauth
+      connection_type: google_sheets_account
+      oauth_intent: sheets_connect
+  - component_id: sheets_before_connect
+    type: markdown
+    title: Before you connect
+    body: |
+      **Before you connect**
+
+      A Flow Steward project administrator enables Sheets and Drive APIs. Google Picker shortcuts are optional and reuse the project-scoped Picker configuration. The Google account owner connects a Sheets account and approves `drive.file`.
+
+      Flow Steward can read and write only spreadsheets created by the app or explicitly selected with Google Picker. This release does not request the broader `spreadsheets` scope. Open the Setup guide tab for exact administrator steps.

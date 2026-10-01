@@ -1,0 +1,67 @@
+queries:
+  - query_id: gmail_labels
+    operation_id: list_labels
+    connection_type_id: google_gmail_account
+    value_field: label_id
+    label_field: name
+    eligibility: search
+  - query_id: gmail_move_labels
+    operation_id: list_labels
+    connection_type_id: google_gmail_account
+    value_field: label_id
+    label_field: name
+    eligibility: move
+  - query_id: google_drive_files
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Google Drive files
+    description: Bounded app-visible files for a typed selector; Google Picker remains available for explicit selection.
+    cursor_mode: cursor
+    value_field: id
+    label_field: label
+    resource_kind: file
+  - query_id: google_drive_folders
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Google Drive folders
+    description: Bounded app-visible folders for a typed selector; Google Picker remains available for explicit selection.
+    cursor_mode: cursor
+    value_field: id
+    label_field: label
+    resource_kind: folder
+  - query_id: google_spreadsheets
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Google spreadsheets
+    description: Bounded app-visible spreadsheets for a typed selector; Google Picker remains available for explicit selection.
+    cursor_mode: cursor
+    value_field: id
+    label_field: label
+    resource_kind: spreadsheet
+  - query_id: google_drive_file_by_id
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Validate selected Google Drive file
+    description: Exact-ID validation through the selected workflow connection after Google Picker selection.
+    cursor_mode: none
+    value_field: id
+    label_field: label
+    resource_kind: file
+  - query_id: google_drive_folder_by_id
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Validate selected Google Drive folder
+    description: Exact-ID validation through the selected workflow connection after Google Picker selection.
+    cursor_mode: none
+    value_field: id
+    label_field: label
+    resource_kind: folder
+  - query_id: google_spreadsheet_by_id
+    operation_id: search_drive_files
+    connection_type_id: google_drive_account
+    display_name: Validate selected Google spreadsheet
+    description: Exact-ID validation through the selected workflow connection after Google Picker selection.
+    cursor_mode: none
+    value_field: id
+    label_field: label
+    resource_kind: spreadsheet

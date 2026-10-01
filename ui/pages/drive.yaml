@@ -1,0 +1,21 @@
+page_id: drive
+title: Drive
+description: Enable bounded Drive access and select files or folders with Google Picker.
+components:
+  - component_id: drive_oauth_connections
+    type: connection_form
+    title: Google Drive accounts
+    description: Add independently authorized Drive accounts for this project.
+    data:
+      oauth_provider_id: workspace_oauth
+      connection_type: google_drive_account
+      oauth_intent: drive_connect
+  - component_id: drive_before_connect
+    type: markdown
+    title: Before you connect
+    body: |
+      **Before you connect**
+
+      A Flow Steward project administrator enables Drive API. Google Picker shortcuts are optional and require the restricted Picker browser key, App ID, and exact origin in this project's Setup guide. The Google account owner connects a Drive account and approves `drive.file`.
+
+      Flow Steward can access only files created by the app or explicitly selected with Google Picker. Selecting a folder does not grant assumed access to every child. Open the Setup guide tab for exact administrator steps.
