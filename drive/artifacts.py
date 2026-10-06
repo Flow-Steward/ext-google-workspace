@@ -14,6 +14,7 @@ from flowsteward_extension_sdk.http import verified_platform_grant_signature
 
 from .config import artifact_max_bytes
 from .errors import DriveExtensionError
+from .progress import TransferProgress, transfer_progress
 from .validation import identifier
 
 _TOKEN_APPLICATION_PDF = "application/pdf"
@@ -87,7 +88,12 @@ def download_drive_file(
             raise DriveExtensionError("drive_file_too_large", "The Drive file is too large")
         chunks = transport.stream_file_media(file_id, max_bytes=effective_limit)
 
-    counted, state = _bounded_chunks(chunks, limit=effective_limit, expected_size=expected_size)
+    counted, state = _bounded_chunks(
+        chunks,
+        limit=effective_limit,
+        expected_size=expected_size,
+        progress=transfer_progress("Downloading", filename, total_bytes=expected_size),
+    )
     try:
         written = artifact_writer(
             root_payload,
@@ -249,7 +255,13 @@ def _mime_type(value: Any, *, provider: bool) -> str:
     return text
 
 
-def _bounded_chunks(chunks: Iterable[bytes], *, limit: int, expected_size: int | None):
+def _bounded_chunks(
+    chunks: Iterable[bytes],
+    *,
+    limit: int,
+    expected_size: int | None,
+    progress: TransferProgress | None = None,
+):
     state = {"size": 0}
 
     def iterator():
@@ -264,11 +276,15 @@ def _bounded_chunks(chunks: Iterable[bytes], *, limit: int, expected_size: int |
             state["size"] += len(chunk)
             if state["size"] > limit:
                 raise DriveExtensionError("drive_file_too_large", "The Drive file is too large")
+            if progress is not None:
+                progress(state["size"], False)
             yield chunk
         if expected_size is not None and state["size"] != expected_size:
             raise DriveExtensionError(
                 "google_write_incomplete", "Google Drive returned an incomplete file"
             )
+        if progress is not None:
+            progress(state["size"], True)
 
     return iterator(), state
 

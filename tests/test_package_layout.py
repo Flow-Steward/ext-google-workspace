@@ -19,6 +19,7 @@ DRIVE_MODULES = {
     "artifacts",
     "errors",
     "operations",
+    "progress",
     "search",
     "transport",
     "uploads",

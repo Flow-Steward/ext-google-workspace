@@ -136,3 +136,26 @@ def test_attachment_rejects_malformed_declared_provider_size(
         )
 
     assert error.value.code == "provider_unavailable"
+
+
+def test_attachment_reports_each_stage_before_it_runs(monkeypatch) -> None:
+    monkeypatch.setattr(artifacts, "_output_grant_limit", lambda _payload: 1024)
+    stages: list[str] = []
+    monkeypatch.setattr(
+        artifacts, "report_progress", lambda message="", **_kw: stages.append(message)
+    )
+
+    artifacts.get_attachment(
+        ProviderAttachmentTransport(b"%PDF-example"),
+        {},
+        {"message_id": "m1", "attachment_id": "part-1"},
+        artifact_writer=lambda _root, chunks, **_kwargs: (
+            b"".join(chunks) and {"artifact_handle": "artifact:one"}
+        ),
+    )
+
+    assert stages == [
+        "Reading the message",
+        "Downloading report.pdf from Gmail",
+        "Saving report.pdf (1 KB)",
+    ]

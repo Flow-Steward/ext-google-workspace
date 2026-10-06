@@ -396,7 +396,7 @@ def test_drive_and_sheets_static_contracts_publish_exact_boundaries() -> None:
         "maximum_seconds": 3600,
         "headroom_seconds": 30,
     }
-    assert manifest["version"] == "0.2.0"
+    assert manifest["version"] == "0.2.1"
     assert set(manifest["required_scopes"]) == {
         "extension:invoke",
         "artifact:read",

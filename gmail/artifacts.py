@@ -15,6 +15,16 @@ from flowsteward_extension_sdk import (
 )
 from flowsteward_extension_sdk.http import verified_platform_grant_signature
 
+try:
+    from flowsteward_extension_sdk import report_progress
+except ImportError:  # a Core with an SDK older than 0.3.0 shows no progress
+
+    def report_progress(
+        message: str = "", *, done: int | None = None, total: int | None = None
+    ) -> None:
+        return None
+
+
 from .errors import GmailExtensionError
 from .messages import find_attachment_part
 from .transport import MAX_ATTACHMENT_BYTES, GmailTransport
@@ -49,6 +59,7 @@ def get_attachment(
     grant_limit = _output_grant_limit(root_payload)
     message_id = _identifier(operation_input.get("message_id"), "message_id")
     attachment_id = _identifier(operation_input.get("attachment_id"), "attachment_id")
+    report_progress("Reading the message")
     message = transport.message(message_id)
     part = find_attachment_part(message, attachment_id)
     body = part.get("body") if isinstance(part.get("body"), Mapping) else {}
@@ -65,14 +76,15 @@ def get_attachment(
             )
         if declared_size > effective_limit:
             raise GmailExtensionError("attachment_too_large", "The Gmail attachment is too large")
+    filename = _safe_filename(str(part.get("filename") or _TOKEN_ATTACHMENT_BIN))
     encoded = body.get("data")
     if not encoded:
         provider_attachment_id = str(body.get("attachmentId") or "")
         if not provider_attachment_id:
             raise GmailExtensionError("attachment_not_found", "The Gmail attachment was not found")
+        report_progress(f"Downloading {filename} from Gmail")
         encoded = transport.attachment(message_id, provider_attachment_id).get("data")
     encoded_text = str(encoded or "")
-    filename = _safe_filename(str(part.get("filename") or _TOKEN_ATTACHMENT_BIN))
     content_type = str(part.get("mimeType") or "application/octet-stream").lower()
     digest, decoded_size = _validate_decoded_stream(
         filename,
@@ -80,6 +92,7 @@ def get_attachment(
         encoded_text,
         effective_limit,
     )
+    report_progress(f"Saving {filename} ({_size_text(decoded_size)})")
     try:
         written = artifact_writer(
             root_payload,
@@ -140,6 +153,12 @@ def _identifier(value: Any, field: str) -> str:
     if not text or len(text) > 512 or any(ord(char) < 32 for char in text):
         raise GmailExtensionError("invalid_payload", f"{field} is invalid")
     return text
+
+
+def _size_text(size_bytes: int) -> str:
+    if size_bytes >= 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+    return f"{max(1, round(size_bytes / 1024))} KB"
 
 
 def _safe_filename(value: str) -> str:

@@ -14,6 +14,7 @@ from flowsteward_extension_sdk import (
 from .artifacts import scope_matches
 from .config import artifact_max_bytes
 from .errors import DriveExtensionError
+from .progress import TransferProgress, transfer_progress
 from .validation import bounded_text, identifier, provider_web_view_link
 
 UPLOAD_BINDING_KEY = "drive_upload_artifact"
@@ -123,7 +124,13 @@ def upload_drive_file(
             chunk_size=1024 * 1024,
             timeout_seconds=30.0,
         )
-        counted, state = _exact_size_chunks(source, expected_size=grant["size"])
+        counted, state = _exact_size_chunks(
+            source,
+            expected_size=grant["size"],
+            progress=transfer_progress(
+                "Uploading", normalized["filename"], total_bytes=grant["size"]
+            ),
+        )
         uploaded = transport.upload_resumable(
             session_url,
             counted,
@@ -173,7 +180,12 @@ def _operation_id(payload: Mapping[str, Any]) -> str:
     return text
 
 
-def _exact_size_chunks(chunks: Iterable[bytes], *, expected_size: int):
+def _exact_size_chunks(
+    chunks: Iterable[bytes],
+    *,
+    expected_size: int,
+    progress: TransferProgress | None = None,
+):
     state = {"size": 0}
 
     def iterator():
@@ -190,11 +202,15 @@ def _exact_size_chunks(chunks: Iterable[bytes], *, expected_size: int):
                 raise DriveExtensionError(
                     "artifact_input_unavailable", "The input artifact exceeds its signed size"
                 )
+            if progress is not None:
+                progress(state["size"], False)
             yield chunk
         if state["size"] != expected_size:
             raise DriveExtensionError(
                 "artifact_input_unavailable", "The input artifact stream is incomplete"
             )
+        if progress is not None:
+            progress(state["size"], True)
 
     return iterator(), state
 

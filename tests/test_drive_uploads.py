@@ -440,3 +440,26 @@ def test_drive_timeout_response_uses_host_ambiguity_vocabulary() -> None:
 
     assert response["external_effect_status"] == "timeout_unknown"
     assert response["definitely_no_external_effect"] is False
+
+
+def test_upload_reports_megabytes_against_the_artifact_size(monkeypatch) -> None:
+    from drive import progress
+    from drive.uploads import upload_drive_file
+
+    megabyte = 1024 * 1024
+    reported: list[tuple[str, int | None, int | None]] = []
+    monkeypatch.setattr(
+        progress,
+        "report_progress",
+        lambda message="", *, done=None, total=None: reported.append((message, done, total)),
+    )
+
+    upload_drive_file(
+        UploadTransport(),
+        _payload(size=2 * megabyte),
+        _input(),
+        artifact_streamer=lambda *_args, **_kwargs: iter([b"a" * megabyte, b"b" * megabyte]),
+    )
+
+    assert reported[0] == ("Uploading stock.csv (MB)", 1, 2)
+    assert reported[-1] == ("Uploading stock.csv (MB)", 2, 2)

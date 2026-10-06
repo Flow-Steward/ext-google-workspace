@@ -2,7 +2,7 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.google-workspace
 kind: tool_provider
-version: 0.2.0
+version: 0.2.1
 display_name: Google Workspace
 description: Project-scoped Gmail, Drive, and Sheets access using project-scoped Google OAuth application credentials.
 vendor: {name: Flow Steward}

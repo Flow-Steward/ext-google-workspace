@@ -272,3 +272,67 @@ def test_output_grant_scope_mismatch_fails_before_google_network(monkeypatch) ->
 
     assert exc_info.value.code == "artifact_output_unavailable"
     assert transport.media_calls == []
+
+
+def _recorder(monkeypatch, module) -> list[tuple[str, int | None, int | None]]:
+    reported: list[tuple[str, int | None, int | None]] = []
+    monkeypatch.setattr(
+        module,
+        "report_progress",
+        lambda message="", *, done=None, total=None: reported.append((message, done, total)),
+    )
+    return reported
+
+
+def test_binary_download_reports_megabytes_against_the_drive_size(monkeypatch) -> None:
+    from drive import artifacts, progress
+
+    megabyte = 1024 * 1024
+    monkeypatch.setattr(artifacts, "output_grant_limit", lambda _payload: 10 * megabyte)
+    reported = _recorder(monkeypatch, progress)
+    transport = DownloadTransport(
+        {
+            "id": "file-1",
+            "name": "stock.csv",
+            "mimeType": "text/csv",
+            "size": str(2 * megabyte),
+            "modifiedTime": "2026-08-25T12:30:00Z",
+        },
+        [b"a" * megabyte, b"b" * megabyte],
+    )
+
+    artifacts.download_drive_file(transport, {}, _input(), artifact_writer=_writer([]))
+
+    assert reported[0] == ("Downloading stock.csv (MB)", 1, 2)
+    assert reported[-1] == ("Downloading stock.csv (MB)", 2, 2)
+
+
+def test_progress_without_a_size_says_how_much_has_moved(monkeypatch) -> None:
+    from drive import progress
+
+    reported = _recorder(monkeypatch, progress)
+    ticks = iter([0.0, 0.5, 2.0])
+    report = progress.transfer_progress(
+        "Downloading", "Plan.pdf", total_bytes=None, clock=lambda: next(ticks)
+    )
+    megabyte = 1024 * 1024
+
+    report(megabyte, False)
+    report(megabyte + 1, False)  # same megabyte: nothing
+    report(3 * megabyte, True)  # the end always lands
+
+    assert reported == [
+        ("Downloading Plan.pdf: 1 MB so far", 1, None),
+        ("Downloading Plan.pdf: 3 MB so far", 3, None),
+    ]
+
+
+def test_a_file_under_a_megabyte_reports_nothing(monkeypatch) -> None:
+    from drive import progress
+
+    reported = _recorder(monkeypatch, progress)
+    report = progress.transfer_progress("Downloading", "tiny.csv", total_bytes=None)
+    report(10, False)
+    report(10, True)
+
+    assert reported == []
