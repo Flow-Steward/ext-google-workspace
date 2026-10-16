@@ -11,25 +11,16 @@ from typing import Any
 from flowsteward_extension_sdk import (
     ArtifactAccessError,
     find_artifact_descriptor,
+    report_progress,
     write_artifact_stream,
 )
 from flowsteward_extension_sdk.http import verified_platform_grant_signature
-
-try:
-    from flowsteward_extension_sdk import report_progress
-except ImportError:  # a Core with an SDK older than 0.3.0 shows no progress
-
-    def report_progress(
-        message: str = "", *, done: int | None = None, total: int | None = None
-    ) -> None:
-        return None
-
 
 from .errors import GmailExtensionError
 from .messages import find_attachment_part
 from .transport import MAX_ATTACHMENT_BYTES, GmailTransport
 
-_TOKEN_ATTACHMENT_BIN = "attachment.bin"
+_TOKEN_ATTACHMENT_BIN = "attachment.bin"  # nosec B105 - a default file name, not a secret
 _MESSAGE_THE_APPROVED_ARTIFACT_OUTPUT_IS_UNAVAILABLE = "The approved artifact output is unavailable"
 _MESSAGE_ATTACHMENT_TYPE_IS_NOT_ALLOWED = "Attachment type is not allowed"
 
@@ -62,7 +53,8 @@ def get_attachment(
     report_progress("Reading the message")
     message = transport.message(message_id)
     part = find_attachment_part(message, attachment_id)
-    body = part.get("body") if isinstance(part.get("body"), Mapping) else {}
+    raw_body = part.get("body")
+    body = raw_body if isinstance(raw_body, Mapping) else {}
     effective_limit = min(MAX_ATTACHMENT_BYTES, grant_limit)
     declared_size = body.get("size")
     if declared_size is not None:

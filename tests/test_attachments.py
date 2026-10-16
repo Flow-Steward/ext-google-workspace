@@ -13,7 +13,7 @@ def _encoded(value: bytes) -> str:
 
 class AttachmentTransport:
     def __init__(self, data: bytes, declared_size: int | None = None) -> None:
-        body = {"data": _encoded(data)}
+        body: dict[str, object] = {"data": _encoded(data)}
         if declared_size is not None:
             body["size"] = declared_size
         self.payload = {
@@ -53,11 +53,11 @@ def test_attachment_writes_bytes_only_to_artifact_and_returns_handle(monkeypatch
     monkeypatch.setattr(artifacts, "_output_grant_limit", lambda _payload: 1024)
 
     result = artifacts.get_attachment(
-        AttachmentTransport(b"%PDF-example"),
+        AttachmentTransport(b"%PDF-example"),  # type: ignore[arg-type]
         {},
         {"message_id": "m1", "attachment_id": "part-1"},
         artifact_writer=lambda _root, chunks, **_kwargs: (
-            written.append(b"".join(chunks)) or {"artifact_handle": "artifact:one"}
+            written.append(b"".join(chunks)) or {"artifact_handle": "artifact:one"}  # type: ignore[func-returns-value]
         ),
     )
 
@@ -71,10 +71,10 @@ def test_provider_attachment_id_is_internal_and_public_part_id_is_preserved(monk
     monkeypatch.setattr(artifacts, "_output_grant_limit", lambda _payload: 1024)
 
     result = artifacts.get_attachment(
-        ProviderAttachmentTransport(b"%PDF-example"),
+        ProviderAttachmentTransport(b"%PDF-example"),  # type: ignore[arg-type]
         {},
         {"message_id": "m1", "attachment_id": "part-1"},
-        artifact_writer=lambda _root, chunks, **_kwargs: (
+        artifact_writer=lambda _root, chunks, **_kwargs: (  # type: ignore[arg-type]
             b"".join(chunks) and {"artifact_handle": "artifact:one"}
         ),
     )
@@ -91,10 +91,10 @@ def test_legacy_xls_accepts_generic_imap_compatible_mime(monkeypatch) -> None:
     part["mimeType"] = "application/x-msexcel"
 
     result = artifacts.get_attachment(
-        transport,
+        transport,  # type: ignore[arg-type]
         {},
         {"message_id": "m1", "attachment_id": "part-1"},
-        artifact_writer=lambda _root, chunks, **_kwargs: (
+        artifact_writer=lambda _root, chunks, **_kwargs: (  # type: ignore[arg-type]
             b"".join(chunks) and {"artifact_handle": "artifact:xls"}
         ),
     )
@@ -110,14 +110,18 @@ def test_declared_size_is_early_rejection_but_decoded_size_is_authoritative(
     _raises_input_110_1 = AttachmentTransport(b"%PDF-x", declared_size=9)
     with pytest.raises(GmailExtensionError) as declared_error:
         artifacts.get_attachment(
-            _raises_input_110_1, {}, {"message_id": "m1", "attachment_id": "part-1"}
+            _raises_input_110_1,  # type: ignore[arg-type]
+            {},
+            {"message_id": "m1", "attachment_id": "part-1"},
         )
     assert declared_error.value.code == "attachment_too_large"
 
     _raises_input_118_1 = AttachmentTransport(b"%PDF-actual-too-large", declared_size=1)
     with pytest.raises(GmailExtensionError) as actual_error:
         artifacts.get_attachment(
-            _raises_input_118_1, {}, {"message_id": "m1", "attachment_id": "part-1"}
+            _raises_input_118_1,  # type: ignore[arg-type]
+            {},
+            {"message_id": "m1", "attachment_id": "part-1"},
         )
     assert actual_error.value.code == "attachment_too_large"
 
@@ -132,7 +136,9 @@ def test_attachment_rejects_malformed_declared_provider_size(
     _raises_input_134_1 = AttachmentTransport(b"%PDF-example", declared_size=declared_size)
     with pytest.raises(GmailExtensionError) as error:
         artifacts.get_attachment(
-            _raises_input_134_1, {}, {"message_id": "m1", "attachment_id": "part-1"}
+            _raises_input_134_1,  # type: ignore[arg-type]
+            {},
+            {"message_id": "m1", "attachment_id": "part-1"},
         )
 
     assert error.value.code == "provider_unavailable"
@@ -146,10 +152,10 @@ def test_attachment_reports_each_stage_before_it_runs(monkeypatch) -> None:
     )
 
     artifacts.get_attachment(
-        ProviderAttachmentTransport(b"%PDF-example"),
+        ProviderAttachmentTransport(b"%PDF-example"),  # type: ignore[arg-type]
         {},
         {"message_id": "m1", "attachment_id": "part-1"},
-        artifact_writer=lambda _root, chunks, **_kwargs: (
+        artifact_writer=lambda _root, chunks, **_kwargs: (  # type: ignore[arg-type]
             b"".join(chunks) and {"artifact_handle": "artifact:one"}
         ),
     )

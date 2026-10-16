@@ -4,11 +4,13 @@ import json
 import subprocess
 import sys
 
-from conftest import BUNDLE_ROOT
+from conftest import BUNDLE_ROOT, HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 
 
 def test_picker_consumes_canonical_action_target_through_real_entrypoint() -> None:
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "get_picker_bootstrap",

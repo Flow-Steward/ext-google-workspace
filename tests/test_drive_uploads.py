@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 
 
 class UploadTransport:
@@ -50,7 +51,7 @@ def _input(**overrides):
 def _payload(*, size: int = 7, mime_type: str = "text/csv") -> dict:
     return {
         "host": {"scope": {"account_id": "account-a", "project_id": "project-a"}},
-        "runtime_context": {"external_effect_id": "effect-123"},
+        "runtime_context": {**ROOT_STEP_SCOPE, "external_effect_id": "effect-123"},
         "artifacts": {
             "inputs": [
                 {
@@ -320,7 +321,7 @@ def test_ambiguous_upload_recovers_file_created_under_operation_marker() -> None
         transport.marker_queries.append((operation_id, folder_id))
         return recovered if transport.uploads else None
 
-    transport.find_by_operation_marker = find_after_upload
+    transport.find_by_operation_marker = find_after_upload  # type: ignore[method-assign]
     result = upload_drive_file(
         transport,
         _payload(),
@@ -379,8 +380,13 @@ def test_upload_test_mode_validates_handle_but_suppresses_before_token_and_provi
     payload = _payload()
     payload.update(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
             "mode": "action",
-            "runtime_context": {"test_mode": True, "external_effect_id": "effect-123"},
+            "runtime_context": {
+                **ROOT_STEP_SCOPE,
+                "test_mode": True,
+                "external_effect_id": "effect-123",
+            },
             "action": {
                 "action_id": "upload_drive_file",
                 "page_id": "workflow-builder",
@@ -416,8 +422,9 @@ def test_live_upload_requires_signed_artifact_grant_before_oauth(monkeypatch) ->
         ),
     )
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
         "mode": "action",
-        "runtime_context": {"external_effect_id": "effect-123"},
+        "runtime_context": {**ROOT_STEP_SCOPE, "external_effect_id": "effect-123"},
         "action": {
             "action_id": "upload_drive_file",
             "page_id": "workflow-builder",

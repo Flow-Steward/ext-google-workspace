@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, TypeGuard
 
 ALLOWED_ACTION_KEYS = frozenset(
     {
@@ -18,7 +18,7 @@ ALLOWED_ACTION_KEYS = frozenset(
 )
 
 
-def is_valid_action_envelope(value: Any) -> bool:
+def is_valid_action_envelope(value: Any) -> TypeGuard[Mapping[str, Any]]:
     """Accept the complete host envelope and reject provider-controlled extras."""
     return isinstance(value, Mapping) and not set(value).difference(ALLOWED_ACTION_KEYS)
 

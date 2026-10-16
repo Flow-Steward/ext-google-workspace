@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 
 import pytest
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 from gmail.errors import GmailExtensionError
 from gmail.operations import handle_payload, handle_runtime
 from gmail.search import compile_query, normalized_filters, search_messages
@@ -16,12 +17,17 @@ def _canonical_workflow_test_payload(
     connection_type_id: str,
 ) -> dict:
     return {
-        "contract_version": "extension_host_v1",
+        "contract_version": HOST_CONTRACT_VERSION,
         "mode": "action",
         "host": {
-            "contract_version": "extension_host_v1",
+            "contract_version": HOST_CONTRACT_VERSION,
             "operation": "command",
-            "scope": {"account_id": "account-a", "project_id": "project-a"},
+            "scope": {
+                "account_id": "account-a",
+                "project_id": "project-a",
+                "job_id": "release-audit-job",
+                **ROOT_STEP_SCOPE,
+            },
             "principal": {"actor_type": "user", "actor_id": "user-a"},
         },
         "action": {
@@ -41,7 +47,7 @@ def _canonical_workflow_test_payload(
                 }
             },
         },
-        "runtime_context": {"test_mode": True},
+        "runtime_context": {**ROOT_STEP_SCOPE, "test_mode": True},
     }
 
 
@@ -293,6 +299,8 @@ def test_workspace_dispatcher_rejects_unknown_operations() -> None:
 
     unknown = dispatch_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "unknown_google_operation",
@@ -314,6 +322,8 @@ def test_workspace_dispatcher_routes_drive_without_exposing_it_to_gmail(monkeypa
         lambda payload: captured.update(payload) or {"ok": True, "result": {"files": []}},
     )
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "search_drive_files",
@@ -351,6 +361,8 @@ def test_dispatcher_routes_drive_picker_query_to_bounded_search(monkeypatch) -> 
     monkeypatch.setattr(drive_operations, "search_drive_files", fake_search)
     response = dispatcher.dispatch_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "query",
             "query": {
                 "query_id": "google_drive_files",
@@ -398,6 +410,8 @@ def test_workspace_dispatcher_routes_sheets_to_its_service(monkeypatch) -> None:
         ),
     )
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "read_google_sheet",
@@ -434,6 +448,8 @@ def test_sheets_runtime_uses_only_explicitly_selected_connection_token(monkeypat
     )
     response = sheets_operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "read_google_sheet",
@@ -475,6 +491,8 @@ def test_drive_runtime_uses_only_the_explicitly_selected_connection_token(monkey
     monkeypatch.setattr(drive_operations, "DriveTransport", DriveListTransport)
     response = drive_operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "search_drive_files",
@@ -524,6 +542,8 @@ def test_drive_picker_validation_reads_exact_file_through_selected_connection(mo
     monkeypatch.setattr(drive_operations, "DriveTransport", ExactMetadataTransport)
     response = drive_operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "query",
             "query": {
                 "query_id": "google_drive_file_by_id",
@@ -573,6 +593,8 @@ class ProfileTransport:
 
 def test_runtime_uses_only_selected_connection_token() -> None:
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "test_connection",
@@ -588,7 +610,7 @@ def test_runtime_uses_only_selected_connection_token() -> None:
         "provider": {"secrets": {"access_token": "wrong-provider-token"}},
     }
 
-    response = handle_payload(payload, transport_factory=ProfileTransport)
+    response = handle_payload(payload, transport_factory=ProfileTransport)  # type: ignore[arg-type]
 
     assert response == {
         "ok": True,
@@ -611,6 +633,7 @@ def test_search_test_mode_rejects_invalid_input_before_provider_access() -> None
 
     invalid = handle_payload(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
             "mode": "action",
             "action": {
                 "action_id": "search_messages",
@@ -627,9 +650,9 @@ def test_search_test_mode_rejects_invalid_input_before_provider_access() -> None
                     }
                 },
             },
-            "runtime_context": {"test_mode": True},
+            "runtime_context": {**ROOT_STEP_SCOPE, "test_mode": True},
         },
-        transport_factory=ForbiddenTransport,
+        transport_factory=ForbiddenTransport,  # type: ignore[arg-type]
     )
     assert invalid["ok"] is False
     assert invalid["error_code"] == "invalid_payload"
@@ -646,6 +669,8 @@ def test_test_connection_rejects_boolean_provider_counts() -> None:
             }
 
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "test_connection",
@@ -660,7 +685,7 @@ def test_test_connection_rejects_boolean_provider_counts() -> None:
         },
     }
 
-    response = handle_payload(payload, transport_factory=BooleanCountTransport)
+    response = handle_payload(payload, transport_factory=BooleanCountTransport)  # type: ignore[arg-type]
 
     assert response["ok"] is False
     assert response["error_code"] == "mailbox_unusable"
@@ -668,6 +693,8 @@ def test_test_connection_rejects_boolean_provider_counts() -> None:
 
 def test_runtime_rejects_connection_ref_that_does_not_match_selected_connection() -> None:
     payload = {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "test_connection",
@@ -683,7 +710,7 @@ def test_runtime_rejects_connection_ref_that_does_not_match_selected_connection(
         "provider": {"secrets": {"access_token": "must-not-be-used"}},
     }
 
-    response = handle_payload(payload, transport_factory=ProfileTransport)
+    response = handle_payload(payload, transport_factory=ProfileTransport)  # type: ignore[arg-type]
 
     assert response["ok"] is False
     assert response["error_code"] == "invalid_connection"
@@ -706,10 +733,12 @@ class LabelsTransport:
 def test_move_label_resource_query_excludes_ineligible_system_labels(monkeypatch) -> None:
     monkeypatch.setattr(
         "gmail.operations.handle_payload",
-        lambda payload: handle_payload(payload, transport_factory=LabelsTransport),
+        lambda payload: handle_payload(payload, transport_factory=LabelsTransport),  # type: ignore[arg-type]
     )
     response = handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "query",
             "query": {
                 "query_id": "gmail_move_labels",
@@ -773,7 +802,8 @@ def test_search_rejects_malformed_provider_collection_ids_and_page_token(
     _raises_input_773_1 = SearchTransport()
     with pytest.raises(GmailExtensionError) as error:
         search_messages(
-            _raises_input_773_1, {"connection_ref": "gmail-a", "label_id": "INBOX", "limit": 10}
+            _raises_input_773_1,  # type: ignore[arg-type]
+            {"connection_ref": "gmail-a", "label_id": "INBOX", "limit": 10},
         )
 
     assert error.value.code == "provider_unavailable"
@@ -795,7 +825,8 @@ def test_search_rejects_oversized_provider_ids_and_page_token(provider_payload) 
     _raises_input_795_1 = SearchTransport()
     with pytest.raises(GmailExtensionError) as error:
         search_messages(
-            _raises_input_795_1, {"connection_ref": "gmail-a", "label_id": "INBOX", "limit": 10}
+            _raises_input_795_1,  # type: ignore[arg-type]
+            {"connection_ref": "gmail-a", "label_id": "INBOX", "limit": 10},
         )
 
     assert error.value.code == "response_too_large"
@@ -810,8 +841,8 @@ def test_search_accepts_absent_or_null_messages_as_empty_provider_page() -> None
             return self.payload
 
     operation_input = {"connection_ref": "gmail-a", "label_id": "INBOX", "limit": 10}
-    assert search_messages(SearchTransport({}), operation_input)["messages"] == []
-    assert search_messages(SearchTransport({"messages": None}), operation_input)["messages"] == []
+    assert search_messages(SearchTransport({}), operation_input)["messages"] == []  # type: ignore[arg-type]
+    assert search_messages(SearchTransport({"messages": None}), operation_input)["messages"] == []  # type: ignore[arg-type]
 
 
 def test_get_message_include_switches_reject_non_boolean_values_before_io() -> None:
@@ -823,6 +854,8 @@ def test_get_message_include_switches_reject_non_boolean_values_before_io() -> N
     ):
         response = handle_payload(
             {
+                "contract_version": HOST_CONTRACT_VERSION,
+                "runtime_context": dict(ROOT_STEP_SCOPE),
                 "mode": "action",
                 "action": {
                     "action_id": "get_message",

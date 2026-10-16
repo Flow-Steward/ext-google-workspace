@@ -1,8 +1,4 @@
-"""Tell the person watching a run how far a Drive transfer has got.
-
-``report_progress`` comes from extension SDK 0.3.0. On a Core with an older SDK
-it is absent and transfers run as before, without a progress line.
-"""
+"""Tell the person watching a run how far a Drive transfer has got."""
 
 from __future__ import annotations
 
@@ -10,15 +6,7 @@ import math
 import time
 from collections.abc import Callable
 
-try:
-    from flowsteward_extension_sdk import report_progress
-except ImportError:  # a Core with an SDK older than 0.3.0 shows no progress
-
-    def report_progress(
-        message: str = "", *, done: int | None = None, total: int | None = None
-    ) -> None:
-        return None
-
+from flowsteward_extension_sdk import report_progress
 
 PROGRESS_MIN_INTERVAL_SECONDS = 1.0
 _MEGABYTE = 1024 * 1024

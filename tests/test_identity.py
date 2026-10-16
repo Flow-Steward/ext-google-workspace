@@ -4,6 +4,7 @@ import json
 from contextlib import contextmanager
 
 import pytest
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 
 
 class _Response:
@@ -47,6 +48,8 @@ def test_verify_identity_owns_fixed_google_request_and_projects_closed_result(
 
     response = identity.handle_verify_identity(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "verify_google_identity",
@@ -102,6 +105,8 @@ def test_verify_identity_rejects_malformed_provider_data(
 
     response = identity.handle_verify_identity(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "verify_google_identity",
@@ -133,6 +138,8 @@ def test_verify_identity_fails_closed_on_extra_or_missing_secrets() -> None:
     ):
         response = identity.handle_verify_identity(
             {
+                "contract_version": HOST_CONTRACT_VERSION,
+                "runtime_context": dict(ROOT_STEP_SCOPE),
                 "mode": "action",
                 "action": {
                     "action_id": "verify_google_identity",
@@ -150,6 +157,8 @@ def test_verify_identity_does_not_read_legacy_top_level_target() -> None:
 
     response = identity.handle_verify_identity(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {"action_id": "verify_google_identity"},
             "target": {"connection": {"secrets": {"access_token": "legacy-token"}}},

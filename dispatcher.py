@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from flowsteward_extension_sdk import runtime_context_from_payload
+
 from drive.operations import DRIVE_QUERY_IDS
 from drive.operations import OPERATION_IDS as DRIVE_OPERATION_IDS
 from drive.operations import handle_runtime as handle_drive_runtime
@@ -37,6 +39,14 @@ SERVICE_HANDLERS: dict[str, RuntimeHandler] = {
 
 
 def dispatch_runtime(payload: dict[str, Any]) -> dict[str, Any]:
+    # The host envelope is checked before anything is read or sent: another
+    # contract, a missing execution-scope key or two owners is refused here.
+    try:
+        runtime_context_from_payload(payload)
+    except ValueError as exc:
+        response = _error("invalid_host_envelope", str(exc))
+        response["definitely_no_external_effect"] = True
+        return response
     operation_id = _operation_id(payload)
     service = OPERATION_REGISTRY.get(operation_id)
     handler = SERVICE_HANDLERS.get(service or "")

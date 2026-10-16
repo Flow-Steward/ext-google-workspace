@@ -54,7 +54,7 @@ def test_search_drive_files_compiles_one_closed_request_and_preserves_provider_o
         }
     )
 
-    result = search_drive_files(transport, _input())
+    result = search_drive_files(transport, _input())  # type: ignore[arg-type]
 
     assert len(transport.queries) == 1
     query = transport.queries[0]
@@ -80,7 +80,7 @@ def test_drive_cursor_is_filter_bound_and_never_exposes_provider_token() -> None
     from drive.search import decode_cursor, search_drive_files
 
     first = search_drive_files(
-        _Transport({"files": [], "nextPageToken": "private-provider-token"}),
+        _Transport({"files": [], "nextPageToken": "private-provider-token"}),  # type: ignore[arg-type]
         _input(),
     )
     cursor = first["next_cursor"]
@@ -115,6 +115,6 @@ def test_search_drive_files_rejects_malformed_provider_shapes(payload) -> None:
     _raises_input_114_1 = _Transport(payload)
     _raises_input_114_2 = _input()
     with pytest.raises(DriveExtensionError) as exc_info:
-        search_drive_files(_raises_input_114_1, _raises_input_114_2)
+        search_drive_files(_raises_input_114_1, _raises_input_114_2)  # type: ignore[arg-type]
 
     assert exc_info.value.code in {"provider_unavailable", "response_too_large"}

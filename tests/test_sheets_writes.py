@@ -6,6 +6,7 @@ import math
 from urllib.error import HTTPError
 
 import pytest
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 
 
 def _rows():
@@ -97,10 +98,10 @@ def test_inline_rows_enforce_100_by_100_10k_and_scalar_bounds(rows) -> None:
 
 class SheetsMutationTransport:
     def __init__(self) -> None:
-        self.updates = []
-        self.clears = []
-        self.batches = []
-        self.marker = None
+        self.updates: list = []
+        self.clears: list = []
+        self.batches: list = []
+        self.marker: dict | None = None
         self.old_values = [["old", "old"], ["old", "old"]]
         self.metadata = {
             "sheets": [
@@ -137,8 +138,8 @@ class SheetsMutationTransport:
 class DriveCreateTransport:
     def __init__(self, existing=None) -> None:
         self.existing = existing
-        self.searches = []
-        self.creates = []
+        self.searches: list = []
+        self.creates: list = []
 
     def find_by_operation_marker(self, operation_id, folder_id):
         self.searches.append((operation_id, folder_id))
@@ -155,7 +156,7 @@ class DriveCreateTransport:
 
 
 def _runtime():
-    return {"runtime_context": {"external_effect_id": "effect-123"}}
+    return {"runtime_context": {**ROOT_STEP_SCOPE, "external_effect_id": "effect-123"}}
 
 
 def test_create_uses_one_drive_marker_and_raw_value_batches() -> None:
@@ -365,8 +366,13 @@ def test_sheet_mutation_test_mode_suppresses_before_oauth_dataset_or_provider(
     input_payload = _create_input() if operation == "write_google_sheet" else _append_input()
     response = operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
             "mode": "action",
-            "runtime_context": {"test_mode": True, "external_effect_id": "effect-123"},
+            "runtime_context": {
+                **ROOT_STEP_SCOPE,
+                "test_mode": True,
+                "external_effect_id": "effect-123",
+            },
             "action": {
                 "action_id": operation,
                 "page_id": "workflow-builder",
@@ -423,7 +429,7 @@ def test_sheets_mutation_transport_uses_raw_fixed_paths_and_atomic_batch() -> No
         "values": [["=not-a-formula", 2]],
     }
     assert requests[2][0].full_url.endswith("/spreadsheets/spreadsheet-1:batchUpdate")
-    assert marker["metadataValue"] == "effect:chunk:0"
+    assert marker["metadataValue"] == "effect:chunk:0"  # type: ignore[index]
 
 
 def test_sheets_mutation_timeout_is_unknown_and_not_replayed() -> None:
@@ -711,8 +717,13 @@ def test_test_mode_consumes_and_rejects_late_dataset_failure_before_oauth(monkey
 
     response = operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
             "mode": "action",
-            "runtime_context": {"test_mode": True, "external_effect_id": "effect-123"},
+            "runtime_context": {
+                **ROOT_STEP_SCOPE,
+                "test_mode": True,
+                "external_effect_id": "effect-123",
+            },
             "host": {"scope": {"account_id": "account-a", "project_id": "project-a"}},
             "action": {"action_id": "append_google_sheet_rows", "input": input_payload},
         }
@@ -748,8 +759,13 @@ def test_dataset_scope_mismatch_in_test_mode_fails_before_oauth_or_provider(monk
     input_payload["dataset_handle"] = "dataset:one"
     response = operations.handle_runtime(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
             "mode": "action",
-            "runtime_context": {"test_mode": True, "external_effect_id": "effect-123"},
+            "runtime_context": {
+                **ROOT_STEP_SCOPE,
+                "test_mode": True,
+                "external_effect_id": "effect-123",
+            },
             "host": {"scope": {"account_id": "account-a", "project_id": "project-a"}},
             "action": {"action_id": "write_google_sheet", "input": input_payload},
         }

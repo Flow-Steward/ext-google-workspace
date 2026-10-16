@@ -17,7 +17,7 @@ from .errors import DriveExtensionError
 from .progress import TransferProgress, transfer_progress
 from .validation import identifier
 
-_TOKEN_APPLICATION_PDF = "application/pdf"
+_TOKEN_APPLICATION_PDF = "application/pdf"  # nosec B105 - a media type, not a secret
 _MESSAGE_THE_APPROVED_ARTIFACT_OUTPUT_IS_UNAVAILABLE = "The approved artifact output is unavailable"
 _MESSAGE_GOOGLE_DRIVE_RETURNED_INVALID_METADATA = "Google Drive returned invalid metadata"
 

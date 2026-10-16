@@ -22,8 +22,8 @@ from .errors import DriveExtensionError
 from .validation import provider_web_view_link
 
 _MESSAGE_GOOGLE_DRIVE_UPLOAD_OUTCOME_IS_UNKNOWN = "Google Drive upload outcome is unknown"
-_TOKEN_WWW_GOOGLEAPIS_COM = "www.googleapis.com"
-_TOKEN_APPLICATION_JSON = "application/json"
+_TOKEN_WWW_GOOGLEAPIS_COM = "www.googleapis.com"  # nosec B105 - a host name, not a secret
+_TOKEN_APPLICATION_JSON = "application/json"  # nosec B105 - a media type, not a secret
 _MESSAGE_GOOGLE_DRIVE_UPLOAD_EXCEEDED_ITS_OPERATION_DEADLINE = (
     "Google Drive upload exceeded its operation deadline"
 )
@@ -101,8 +101,9 @@ class DriveTransport:
         self._monotonic = monotonic
         self._upload_deadline: float | None = None
 
-    def begin_upload_operation(self) -> None:
+    def begin_upload_operation(self) -> float:
         self._upload_deadline = self._monotonic() + self._operation_timeout_seconds
+        return self._upload_deadline
 
     def files_list(self, query: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(query, Mapping) or set(query) - _FILES_LIST_QUERY_FIELDS:
@@ -308,9 +309,9 @@ class DriveTransport:
             or len(mime_type) > 255
         ):
             raise DriveExtensionError("invalid_payload", "Invalid Drive upload grant metadata")
-        if self._upload_deadline is None:
-            self.begin_upload_operation()
-        deadline = float(self._upload_deadline)
+        deadline = self._upload_deadline
+        if deadline is None:
+            deadline = self.begin_upload_operation()
         try:
             upload_chunks = _iter_exact_upload_chunks(
                 chunks,
@@ -541,7 +542,8 @@ class DriveTransport:
                         self._sleep_for_request_retry(
                             _retry_wait(attempt, exc.retry_after_seconds, self._jitter())
                         )
-            assert last_error is not None
+            if last_error is None:
+                raise DriveExtensionError("provider_unavailable", "The Drive upload failed")
             raise last_error
         if path != "/files" and not path.startswith("/files/"):
             raise DriveExtensionError("invalid_payload", "Invalid Drive API path")

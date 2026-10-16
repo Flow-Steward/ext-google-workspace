@@ -114,7 +114,7 @@ def test_drive_ordinary_read_defers_retry_to_core_orchestrator() -> None:
     from drive.transport import DriveTransport
 
     attempts = []
-    waits = []
+    waits: list = []
 
     def opener(request, **_kwargs):
         attempts.append(request.full_url)
@@ -149,7 +149,7 @@ def test_ambiguous_upload_reconciliation_retries_empty_marker_search_without_reu
     from drive.transport import DriveTransport
 
     attempts = []
-    waits = []
+    waits: list = []
 
     def opener(request, **_kwargs):
         attempts.append(request)
@@ -173,8 +173,8 @@ def test_ambiguous_upload_reconciliation_retries_empty_marker_search_without_reu
         jitter=lambda: 0.0,
     ).reconcile_ambiguous_upload("effect-1", "folder-1", expected_size=7)
 
-    assert result["id"] == "file-1"
-    assert result["size"] == "7"
+    assert result["id"] == "file-1"  # type: ignore[index]
+    assert result["size"] == "7"  # type: ignore[index]
     assert len(attempts) == 5
     assert all(request.get_method() == "GET" for request in attempts)
     assert waits == [0.25, 0.5]
@@ -758,7 +758,7 @@ def test_upload_deadline_bounds_reconciliation_retry_sleep() -> None:
 
     now = [100.0]
     requests = []
-    waits = []
+    waits: list = []
 
     def opener(request, **_kwargs):
         requests.append(request)

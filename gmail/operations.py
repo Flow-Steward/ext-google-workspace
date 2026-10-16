@@ -98,10 +98,9 @@ def handle_payload(
         return response
     except GmailExtensionError as exc:
         code = exc.code if exc.code in SAFE_ERROR_CODES else "internal_error"
-        result: dict[str, Any] = {}
         response = {
             "ok": False,
-            "result": result,
+            "result": {},
             "error_code": code,
             "error": exc.message,
             "errors": [{"code": code, "message": exc.message}],
@@ -128,7 +127,7 @@ def _dispatch(
 ) -> dict[str, Any]:
     if operation_id == "test_connection":
         profile = transport.profile()
-        result = {
+        result: dict[str, Any] = {
             "email_address": str(profile.get("emailAddress") or ""),
             "messages_total": profile.get("messagesTotal"),
             "threads_total": profile.get("threadsTotal"),

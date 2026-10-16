@@ -304,7 +304,7 @@ def test_sheets_ordinary_read_defers_retry_to_core_orchestrator() -> None:
     from sheets.transport import SheetsTransport
 
     calls = 0
-    waits = []
+    waits: list = []
 
     def opener(request, **_kwargs):
         nonlocal calls

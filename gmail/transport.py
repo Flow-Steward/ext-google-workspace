@@ -92,7 +92,7 @@ class GmailTransport:
             raise _http_error(
                 exc.code,
                 error_body=error_body,
-                method=request.method,
+                method=request.get_method(),
                 purpose=purpose,
                 retry_after_seconds=_retry_after_seconds(exc.headers),
             ) from exc
@@ -101,13 +101,13 @@ class GmailTransport:
                 "timeout_unknown" if request.method != "GET" else "network_failure",
                 "The Gmail request timed out",
                 ambiguous=request.method != "GET",
-                **_transport_failure_facts(method=request.method),
+                **_transport_failure_facts(method=request.get_method()),
             ) from exc
         except PinnedPeerError as exc:
             raise GmailExtensionError(
                 "network_failure",
                 "The Gmail request failed",
-                **_transport_failure_facts(method=request.method),
+                **_transport_failure_facts(method=request.get_method()),
             ) from exc
         except OSError as exc:
             ambiguous = request.method != "GET"
@@ -115,7 +115,7 @@ class GmailTransport:
                 "timeout_unknown" if ambiguous else "network_failure",
                 "The Gmail request failed",
                 ambiguous=ambiguous,
-                **_transport_failure_facts(method=request.method),
+                **_transport_failure_facts(method=request.get_method()),
             ) from exc
         try:
             payload = json.loads(raw.decode("utf-8") or "{}")
@@ -271,7 +271,7 @@ def _retry_after_seconds(headers: Any) -> float | None:
     return parse_retry_after(raw)
 
 
-def _transport_failure_facts(*, method: str) -> dict[str, object]:
+def _transport_failure_facts(*, method: str) -> dict[str, Any]:
     safe_read = str(method).upper() == "GET"
     return {
         "failure_class": "transient",

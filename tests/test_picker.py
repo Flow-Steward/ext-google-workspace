@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import pytest
+from conftest import HOST_CONTRACT_VERSION, ROOT_STEP_SCOPE
 
 
 def _payload(**configuration):
     return {
+        "contract_version": HOST_CONTRACT_VERSION,
+        "runtime_context": dict(ROOT_STEP_SCOPE),
         "mode": "action",
         "action": {
             "action_id": "get_picker_bootstrap",
@@ -92,6 +95,8 @@ def test_picker_bootstrap_does_not_read_undeclared_legacy_locations() -> None:
 
     response = picker.handle_picker_bootstrap(
         {
+            "contract_version": HOST_CONTRACT_VERSION,
+            "runtime_context": dict(ROOT_STEP_SCOPE),
             "mode": "action",
             "action": {
                 "action_id": "get_picker_bootstrap",

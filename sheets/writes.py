@@ -6,7 +6,7 @@ import tempfile
 from collections import deque
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
-from typing import Any, BinaryIO
+from typing import IO, Any
 
 from drive.config import artifact_max_bytes
 from flowsteward_extension_sdk import (
@@ -37,7 +37,7 @@ MAX_DATASET_CELLS = 1_000_000
 
 @dataclass
 class RowSource:
-    staged_rows: BinaryIO
+    staged_rows: IO[bytes]
     declared_rows: int
     declared_columns: int
 

@@ -127,7 +127,7 @@ def parse_message(
         or any(not isinstance(value, str) for value in raw_label_ids)
     ):
         raise GmailExtensionError("provider_unavailable", "Gmail label IDs are invalid")
-    result = {
+    result: dict[str, Any] = {
         "message_id": str(message.get("id") or ""),
         "thread_id": str(message.get("threadId") or ""),
         "label_ids": list(raw_label_ids or []),

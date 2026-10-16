@@ -38,7 +38,7 @@ def test_test_mode_validates_and_suppresses_before_provider_access() -> None:
     transport = FakeTransport()
 
     result = set_message_flags(
-        transport,
+        transport,  # type: ignore[arg-type]
         {"message_ids": ["a", "a", "b"], "seen": True},
         test_mode=True,
     )
@@ -55,7 +55,7 @@ def test_move_lists_labels_once_then_uses_one_batch_modify() -> None:
     transport = FakeTransport()
 
     result = move_messages(
-        transport,
+        transport,  # type: ignore[arg-type]
         {
             "message_ids": ["a", "b"],
             "source_label_id": "INBOX",
@@ -78,9 +78,9 @@ def test_batch_ambiguity_marks_every_submitted_id_timeout_unknown() -> None:
     def ambiguous(*_args):
         raise GmailExtensionError("timeout_unknown", "timeout", ambiguous=True)
 
-    transport.batch_modify = ambiguous
+    transport.batch_modify = ambiguous  # type: ignore[method-assign]
     result = set_message_flags(
-        transport,
+        transport,  # type: ignore[arg-type]
         {"message_ids": ["a", "b"], "flagged": True},
         test_mode=False,
     )
@@ -98,7 +98,7 @@ def test_sequential_trash_preserves_known_results_and_stops_after_ambiguity() ->
     transport.trash_outcomes = {"b": "failed", "c": "ambiguous"}
 
     result = delete_messages(
-        transport,
+        transport,  # type: ignore[arg-type]
         {"message_ids": ["a", "b", "c", "d"]},
         test_mode=False,
     )
