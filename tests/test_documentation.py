@@ -9,7 +9,7 @@ def test_operator_readme_documents_drive_sheets_security_and_lifecycle() -> None
     readme = (BUNDLE_ROOT / "README.md").read_text()
 
     for required in (
-        "version 0.3.0",
+        "version 0.3.1",
         "https://www.googleapis.com/auth/gmail.modify",
         "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/userinfo.email",

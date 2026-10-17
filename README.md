@@ -1,6 +1,6 @@
 # Google Workspace
 
-Google Workspace extension version 0.3.0 adds Gmail, Google Drive, and Google Sheets
+Google Workspace extension version 0.3.1 adds Gmail, Google Drive, and Google Sheets
 to project workflows. OAuth configuration and every authorization are project-scoped.
 `google_gmail_account`, `google_drive_account`, and `google_sheets_account` are
 separate connections with separate tokens and grants. No default Google account exists:
