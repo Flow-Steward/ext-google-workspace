@@ -1,6 +1,6 @@
 # Google Workspace
 
-Google Workspace extension version 0.3.1 adds Gmail, Google Drive, and Google Sheets
+Google Workspace extension version 0.3.2 adds Gmail, Google Drive, and Google Sheets
 to project workflows. OAuth configuration and every authorization are project-scoped.
 `google_gmail_account`, `google_drive_account`, and `google_sheets_account` are
 separate connections with separate tokens and grants. No default Google account exists:
@@ -10,7 +10,7 @@ The runtime uses only the public `flowsteward_extension_sdk`. Gmail, Drive, and 
 live in separate extension-local packages so the bundle can move to its own repository
 without importing Flow Steward Core implementation modules.
 
-Logo: `icon.png` (the Flow Steward wave mark), next to `extension.yaml`.
+Logo: `icon.png` (the official Google Workspace suite wordmark; PNG, 512x512), next to `extension.yaml`.
 
 ## Requirements
 
@@ -168,3 +168,5 @@ transformation belongs to the tabular/data plane, not this extension.
 - [OAuth app verification](https://support.google.com/cloud/answer/13463073)
 - [Restricted Gmail scopes](https://support.google.com/cloud/answer/13464325)
 - [Security assessment requirements](https://support.google.com/cloud/answer/13465431)
+
+Logo sources and attribution: [BRANDING.md](BRANDING.md).

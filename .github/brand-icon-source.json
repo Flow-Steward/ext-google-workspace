@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "extension_id": "flowsteward.google-workspace",
+  "release_version": "0.3.2",
+  "asset": "icon.png",
+  "asset_sha256": "e4a550a2b736fa8d6a8549aa7196ab9fa450fb5b7a27b2f980534b44d5d84383",
+  "dimensions": "512x512",
+  "official_source_page": "https://www.googlecloudpresscorner.com/assets-and-events",
+  "sources": [
+    {
+      "url": "https://filecache.mediaroom.com/mr5mr_googlecloud/182619/download/GWS_Logo_FullColor_rgb_thumbnail.png",
+      "sha256": "7699b061baa29b9851c59afbfe0f24c2d73f7b223ccd4832cfb8e9245494bba6"
+    }
+  ],
+  "transformation": "Entire official suite wordmark preserved; no single app used to stand for entire Google Workspace. Only empty transparent outer source margins trimmed, then proportionally resized with 56px horizontal clearspace on 512 canvas.",
+  "renderer": "ImageMagick (original PNG input except WhatsApp SVG rendered at density 1600)",
+  "trademark_attribution": "The Google Workspace names and marks belong to Google LLC. This independent integration identifies the supported service; it is not endorsed by or affiliated with the trademark owners.",
+  "usage_notes": "No implication of Google endorsement; preserve logo. Internal comms kit is restricted to internal use and was NOT used; this is public press asset.",
+  "legal_agreement_accepted": false
+}
