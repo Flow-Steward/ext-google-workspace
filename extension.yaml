@@ -2,14 +2,22 @@ manifest_version: 2
 lifecycle: {data_schema_version: 1, data_migrations: []}
 extension_id: flowsteward.google-workspace
 kind: tool_provider
-version: 0.3.3
+version: 0.3.4
 display_name: Google Workspace
-description: Project-scoped Gmail, Drive, and Sheets access using project-scoped Google OAuth application credentials.
+description: |-
+  Google Workspace connects Gmail, Google Drive and Google Sheets to Flow Steward workflows. Search and read Gmail messages, retrieve attachments, organize messages with labels, change read or starred flags and move messages to trash. Search Drive files available to the app, download files or supported native exports, and upload workflow files to a selected folder. Read a Sheets range into a dataset, create a spreadsheet, replace a selected rectangle or append rows to a table.
+
+  Combine these operations for invoice intake, document processing and reporting. Retrieve an email attachment, extract its contents in another step, save the resulting document to Drive and append records to Sheets. Every step selects a compatible project connection, allowing several accounts to participate in a workflow.
+
+  Setup requires your own Google Cloud OAuth web application, enabled service APIs and the Flow Steward redirect URI. Authorize Gmail, Drive and Sheets separately; optional Google Picker configuration enables interactive file selection. File access follows each account's authorization. The extension covers these specific operations rather than every Workspace feature: Gmail sending, Drive sharing and spreadsheet formatting are outside its scope. Sheets writes store values as data, including formula-looking strings.
 vendor: {name: Flow Steward}
 listing:
   category: productivity
   tags: [google, gmail, drive, sheets, email, files, spreadsheets]
-  summary: Connect multiple Google accounts explicitly to Gmail, Drive, and Sheets workflows.
+  summary: |-
+    Read and organize Gmail, transfer Drive files, and read or update Google Sheets through explicitly selected project accounts.
+  setup_summary: |-
+    Configure a Google Cloud OAuth Web application, enable the required service APIs, register Flow Steward’s callback URL and save the Client ID and Client Secret in the project Setup guide. Authorize each service connection separately; add restricted Picker credentials and a trusted origin if you want interactive file selection.
 features: [tool, action]
 required_scopes: [extension:invoke, artifact:read, artifact:write]
 account_scope:

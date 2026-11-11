@@ -1,7 +1,14 @@
 # Google Workspace
 
-Google Workspace extension version 0.3.3 adds Gmail, Google Drive, and Google Sheets
-to project workflows. OAuth configuration and every authorization are project-scoped.
+Google Workspace connects Gmail, Google Drive and Google Sheets to Flow Steward workflows. Search and read Gmail messages, retrieve attachments, organize messages with labels, change read or starred flags and move messages to trash. Search Drive files available to the app, download files or supported native exports, and upload workflow files to a selected folder. Read a Sheets range into a dataset, create a spreadsheet, replace a selected rectangle or append rows to a table.
+
+Combine these operations for invoice intake, document processing and reporting. Retrieve an email attachment, extract its contents in another step, save the resulting document to Drive and append records to Sheets. Every step selects a compatible project connection, allowing several accounts to participate in a workflow.
+
+Setup requires your own Google Cloud OAuth web application, enabled service APIs and the Flow Steward redirect URI. Authorize Gmail, Drive and Sheets separately; optional Google Picker configuration enables interactive file selection. File access follows each account's authorization. The extension covers these specific operations rather than every Workspace feature: Gmail sending, Drive sharing and spreadsheet formatting are outside its scope. Sheets writes store values as data, including formula-looking strings.
+
+## Connection model
+
+This is extension version 0.3.4. OAuth configuration and every authorization are project-scoped.
 `google_gmail_account`, `google_drive_account`, and `google_sheets_account` are
 separate connections with separate tokens and grants. No default Google account exists:
 every workflow operation requires an explicit compatible connection.
