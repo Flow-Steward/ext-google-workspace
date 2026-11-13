@@ -9,6 +9,7 @@ operations:
     outputs: [{name: email_address, value_type: text}, {name: messages_total, value_type: integer}, {name: threads_total, value_type: integer}, {name: history_id, value_type: text}]
     result_fields: [result.email_address, result.messages_total, result.threads_total, result.history_id]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, mailbox_unusable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+    description: "Check that the selected Gmail account is authorized and reachable. Create and authorize a Gmail project connection, then select it for this step. Example: Verify authorization before running a Gmail intake workflow."
   - operation_id: list_labels
     display_name: List Gmail labels
     operation_kind: source
@@ -19,69 +20,76 @@ operations:
     outputs: [{name: labels, value_type: array}]
     result_fields: [result.labels]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_list_too_large, response_too_large, internal_error]
+    description: "List the Gmail account's labels so later steps can select the correct mailbox category. Create and authorize a Gmail project connection, then select it for this step. Example: Find INBOX and a processed label before searching or organizing messages."
   - operation_id: search_messages
     display_name: Search Gmail messages
     operation_kind: source
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: label_id, value_type: text, required: true}, {name: filters, value_type: object, required: false}, {name: limit, value_type: integer, required: false}, {name: cursor, value_type: text, required: false}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: label_id, value_type: text, required: true, description: "Select the Gmail label to search, such as INBOX."}, {name: filters, value_type: object, required: false, description: "JSON object using from, to, cc, subject, text, rfc_message_id, since/before (YYYY-MM-DD), read_state (any/read/unread), star_state (any/starred/unstarred), attachment_state (any/with_attachments/without_attachments)."}, {name: limit, value_type: integer, required: false, description: "Maximum number of results to return in this page."}, {name: cursor, value_type: text, required: false, description: "Leave empty for the first page. For later pages, map next_cursor returned by this search and keep the same connection, filters and page size."}]
     outputs: [{name: messages, value_type: array}, {name: next_cursor, value_type: text}, {name: truncated, value_type: boolean}]
     result_fields: [result.messages, result.next_cursor, result.truncated]
     error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+    description: "Search one Gmail label with typed filters and return message IDs and a next-page cursor. Create and authorize a Gmail project connection, then select it for this step. Example: Find unread invoices under INBOX with filters {\"subject\":\"invoice\",\"read_state\":\"unread\"}."
   - operation_id: get_message
-    display_name: Get Gmail message
+    display_name: "Read Gmail message"
     operation_kind: source
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true}, {name: include_body, value_type: boolean, required: false}, {name: include_headers, value_type: boolean, required: false}, {name: include_attachment_metadata, value_type: boolean, required: false}, {name: include_raw_html, value_type: boolean, required: false}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true, description: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header."}, {name: include_body, value_type: boolean, required: false, description: "Include the message body in the result for downstream text processing."}, {name: include_headers, value_type: boolean, required: false, description: "Include the message headers in the result."}, {name: include_attachment_metadata, value_type: boolean, required: false, description: "Include attachment identifiers, filenames and content types so a later download step can select a file."}, {name: include_raw_html, value_type: boolean, required: false, description: "Include the original HTML body when HTML content is needed by a later step."}]
     outputs: [{name: message, value_type: object}]
     result_fields: [result.message]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, message_too_large, message_too_complex, response_too_large, internal_error]
+    description: "Read one Gmail message by its provider message ID, optionally returning body, headers and attachment metadata. Create and authorize a Gmail project connection, then select it for this step. Example: Read a message_id returned by Search Gmail messages and inspect its attachments."
   - operation_id: get_attachment
-    display_name: Get Gmail attachment
+    display_name: "Download Gmail attachment"
     operation_kind: source
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true}, {name: attachment_id, value_type: text, required: true}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_id, value_type: text, required: true, description: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header."}, {name: attachment_id, value_type: text, required: true, description: "Attachment ID from the selected message's attachment metadata. Use it with that same message_id."}]
     outputs: [{name: attachment_artifact_handle, value_type: artifact_handle}, {name: attachment_metadata, value_type: object}]
     result_fields: [result.attachment_artifact_handle, result.attachment_metadata]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, attachment_not_found, attachment_too_large, attachment_type_disallowed, artifact_output_unavailable, response_too_large, internal_error]
+    description: "Download one Gmail attachment into a workflow file artifact for later steps. Create and authorize a Gmail project connection, then select it for this step. Example: Download a selected invoice attachment and pass the resulting artifact to document extraction."
   - operation_id: set_message_flags
-    display_name: Set Gmail message flags
+    display_name: "Set Gmail read and starred flags"
     operation_kind: action
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}, {name: seen, value_type: boolean, required: false}, {name: flagged, value_type: boolean, required: false}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}, {name: seen, value_type: boolean, required: false, description: "Set true to mark messages read or false to mark them unread. Leave empty to preserve read state; provide at least one of seen or flagged."}, {name: flagged, value_type: boolean, required: false, description: "Set true to star messages or false to remove the star. Leave empty to preserve starred state; provide at least one of seen or flagged."}]
     outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
     result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+    description: "Change read and starred state for selected Gmail message IDs; omitted flags keep their current state. Create and authorize a Gmail project connection, then select it for this step. Example: Set seen=true after successful processing and leave flagged empty to preserve stars."
   - operation_id: move_messages
-    display_name: Move Gmail messages
+    display_name: "Move Gmail messages between labels"
     operation_kind: action
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}, {name: source_label_id, value_type: text, required: true}, {name: target_label_id, value_type: text, required: true}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}, {name: source_label_id, value_type: text, required: true, description: "Select the label to remove from the chosen messages."}, {name: target_label_id, value_type: text, required: true, description: "Select the label to add to the chosen messages."}]
     outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
     result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_not_found, label_ineligible, timeout_unknown, internal_error]
+    description: "Organize selected Gmail messages by removing a source label and adding a target label. Create and authorize a Gmail project connection, then select it for this step. Example: Remove an Inbox label and add a Processed label after downstream work succeeds."
   - operation_id: delete_messages
     display_name: Move Gmail messages to Trash
     operation_kind: action
     category: email
     connection_type_ids: [google_gmail_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/gmail.modify]
-    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true}]
+    inputs: [{name: connection_ref, value_type: connection_ref, required: true}, {name: message_ids, value_type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}]
     outputs: [{name: results, value_type: array}, {name: external_effect_status, value_type: text}, {name: definitely_no_external_effect, value_type: boolean}]
     result_fields: [result.results, result.external_effect_status, result.definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, timeout_unknown, internal_error]
+    description: "Move selected Gmail messages to Trash. Create and authorize a Gmail project connection, then select it for this step. Example: Move duplicate invoice messages to Trash after reviewing the selected message IDs."
   - operation_id: search_drive_files
     display_name: Search Google Drive files
-    description: Search the app-visible Drive corpus with bounded typed filters and a filter-bound cursor.
+    description: "Search the app-visible Drive corpus with bounded typed filters and a filter-bound cursor. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Find PDF invoices in an app-authorized folder with mime_types=[\"application/pdf\"]."
     operation_kind: source
     category: file_transfer
     connection_type_ids: [google_drive_account]
@@ -89,18 +97,19 @@ operations:
     inputs:
       - {name: connection_ref, value_type: connection_ref, required: true}
       - {name: parent_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
-      - {name: name, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
-      - {name: name_match, value_type: text, required: false, schema: {type: string, enum: [exact, contains], default: contains}}
+      - {name: name, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}, description: "Filename to match using the chosen exact or contains mode."}
+      - {name: name_match, value_type: text, required: false, schema: {type: string, enum: [exact, contains], default: contains}, description: "contains matches part of the filename; exact requires the full filename."}
       - name: mime_types
         value_type: array
         required: false
         schema: {type: array, minItems: 1, maxItems: 20, items: {type: string, minLength: 1, maxLength: 255}}
-      - {name: modified_after, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
-      - {name: modified_before, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}}
-      - {name: trashed, value_type: boolean, required: false, schema: {type: boolean, default: false}}
-      - {name: sort, value_type: text, required: false, schema: {type: string, enum: [provider_order, name_asc, modified_time_desc], default: provider_order}}
-      - {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
-      - {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 8192}}
+        description: "JSON array of MIME type strings used to restrict the search."
+      - {name: modified_after, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}, description: "Return files modified after this RFC 3339 date and time, including a timezone."}
+      - {name: modified_before, value_type: text, required: false, schema: {type: string, maxLength: 64, format: date-time}, description: "Return files modified before this RFC 3339 date and time, including a timezone."}
+      - {name: trashed, value_type: boolean, required: false, schema: {type: boolean, default: false}, description: "False searches files outside Trash. True searches only trashed files."}
+      - {name: sort, value_type: text, required: false, schema: {type: string, enum: [provider_order, name_asc, modified_time_desc], default: provider_order}, description: "provider_order keeps Drive order; name_asc sorts by filename; modified_time_desc returns newest modified first."}
+      - {name: limit, value_type: integer, required: false, schema: {type: integer, minimum: 1, maximum: 100, default: 50}, description: "Maximum number of results to return in this page."}
+      - {name: cursor, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 8192}, description: "Leave empty for the first page. For later pages, map next_cursor returned by this search and keep the same connection, filters and page size."}
     outputs:
       - name: files
         value_type: array
@@ -123,7 +132,7 @@ operations:
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, network_failure, provider_unavailable, response_too_large, internal_error]
   - operation_id: download_drive_file
     display_name: Download Google Drive file
-    description: Stream one selected Drive file or explicit supported native export into an artifact grant.
+    description: "Stream one selected Drive file or explicit supported native export into an artifact grant. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Download a selected PDF, or export an app-authorized native document as PDF for extraction."
     operation_kind: source
     category: file_transfer
     connection_type_ids: [google_drive_account]
@@ -131,7 +140,7 @@ operations:
     inputs:
       - {name: connection_ref, value_type: connection_ref, required: true}
       - {name: file_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
-      - {name: export_mime_type, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}}
+      - {name: export_mime_type, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 255}, description: "For a supported Google native file, explicitly select PDF or Excel export as appropriate. Leave empty for ordinary binary files."}
     outputs:
       - {name: artifact_handle, value_type: artifact_handle}
       - {name: filename, value_type: text}
@@ -144,16 +153,16 @@ operations:
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_resource_not_available_to_connection, google_unsupported_export, drive_file_too_large, artifact_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
   - operation_id: upload_drive_file
     display_name: Upload file to Google Drive
-    description: Stream an owned artifact into one Picker-authorized Drive folder.
+    description: "Stream an owned artifact into one Picker-authorized Drive folder. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Save a generated report artifact as daily-report.pdf in a Picker-authorized folder."
     operation_kind: action
     category: file_transfer
     connection_type_ids: [google_drive_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
     inputs:
       - {name: connection_ref, value_type: connection_ref, required: true}
-      - {name: artifact_handle, value_type: artifact_handle, required: true}
-      - {name: destination_folder_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
-      - {name: filename, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}}
+      - {name: artifact_handle, value_type: artifact_handle, required: true, description: "Map the file artifact handle returned by an earlier download or file-generation step. The file must be available to this workflow run."}
+      - {name: destination_folder_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}, description: "Select an app-authorized destination folder with Google Picker or map an authorized folder ID."}
+      - {name: filename, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 255}, description: "Filename for the uploaded artifact, including its extension."}
     outputs:
       - {name: file_id, value_type: text}
       - {name: name, value_type: text}
@@ -164,7 +173,7 @@ operations:
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, google_write_incomplete, drive_file_too_large, artifact_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
   - operation_id: read_google_sheet
     display_name: Read Google Sheet
-    description: Stream one selected sheet range into a bounded NDJSON dataset grant.
+    description: "Stream one selected sheet range into a bounded NDJSON dataset grant. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Read A1:D100 on the Orders sheet with the first row used as field names."
     operation_kind: source
     category: spreadsheet
     connection_type_ids: [google_sheets_account]
@@ -174,8 +183,8 @@ operations:
       - {name: spreadsheet_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
       - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
       - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
-      - {name: range, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
-      - {name: header_mode, value_type: text, required: false, schema: {type: string, enum: [first_row, none], default: first_row}}
+      - {name: range, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}, description: "A1 range relative to the selected sheet, without a sheet prefix. Leave empty for the supported default read range."}
+      - {name: header_mode, value_type: text, required: false, schema: {type: string, enum: [first_row, none], default: first_row}, description: "first_row uses the first row as dataset field names; none reads rows without treating the first row as a header."}
     outputs:
       - {name: dataset_handle, value_type: dataset_handle}
       - {name: row_count, value_type: integer}
@@ -195,23 +204,24 @@ operations:
     result_fields: [result.dataset_handle, result.row_count, result.column_count, result.schema, result.preview, result.spreadsheet_id, result.sheet_id]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
   - operation_id: write_google_sheet
-    display_name: Write Google Sheet
-    description: Create a spreadsheet or overwrite one selected sheet rectangle with RAW values.
+    display_name: "Create or overwrite Google Sheet"
+    description: "Create a spreadsheet or overwrite one selected sheet rectangle with RAW values. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Create a report spreadsheet from inline_rows=[[\"Order\",\"Total\"],[\"A-100\",42.5]], or overwrite a selected rectangle starting at A1."
     operation_kind: action
     category: spreadsheet
     connection_type_ids: [google_sheets_account]
     required_oauth_scopes: [https://www.googleapis.com/auth/drive.file]
     inputs:
       - {name: connection_ref, value_type: connection_ref, required: true}
-      - {name: mode, value_type: text, required: true, schema: {type: string, enum: [create, overwrite]}}
+      - {name: mode, value_type: text, required: true, schema: {type: string, enum: [create, overwrite]}, description: "create makes a new spreadsheet; overwrite writes to the selected existing sheet starting at start_cell."}
       - {name: dataset_handle, value_type: dataset_handle, required: false}
       - name: inline_rows
         value_type: array
         required: false
         schema: {type: array, maxItems: 100, items: {type: array, maxItems: 100, items: {type: [string, number, boolean, "null"], maxLength: 50000}}}
-      - {name: start_cell, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512, default: A1}}
-      - {name: spreadsheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 200}}
-      - {name: destination_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
+        description: "JSON array of row arrays, up to 100 rows and 100 cells per row. Cells may be strings, numbers, booleans or null. Supply this or dataset_handle, never both."
+      - {name: start_cell, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512, default: A1}, description: "Single A1 cell relative to the selected sheet. Defaults to A1."}
+      - {name: spreadsheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 200}, description: "Name of the spreadsheet to create in create mode."}
+      - {name: destination_folder_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}, description: "Select an app-authorized destination folder with Google Picker or map an authorized folder ID."}
       - {name: spreadsheet_id, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 512}}
       - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
       - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
@@ -225,7 +235,7 @@ operations:
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
   - operation_id: append_google_sheet_rows
     display_name: Append Google Sheet rows
-    description: Append RAW rows after one selected logical table using a stable chunk marker.
+    description: "Append RAW rows after one selected logical table using a stable chunk marker. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Append processed order rows after the logical table in A:D without replacing its existing rows."
     operation_kind: action
     category: spreadsheet
     connection_type_ids: [google_sheets_account]
@@ -235,12 +245,13 @@ operations:
       - {name: spreadsheet_id, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
       - {name: sheet_id, value_type: integer, required: false, schema: {type: integer, minimum: 0}}
       - {name: sheet_title, value_type: text, required: false, schema: {type: string, minLength: 1, maxLength: 100}}
-      - {name: table_range, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}}
+      - {name: table_range, value_type: text, required: true, schema: {type: string, minLength: 1, maxLength: 512}, description: "Relative A1 range identifying the logical table after which rows are appended."}
       - {name: dataset_handle, value_type: dataset_handle, required: false}
       - name: inline_rows
         value_type: array
         required: false
         schema: {type: array, maxItems: 100, items: {type: array, maxItems: 100, items: {type: [string, number, boolean, "null"], maxLength: 50000}}}
+        description: "JSON array of row arrays, up to 100 rows and 100 cells per row. Cells may be strings, numbers, booleans or null. Supply this or dataset_handle, never both."
     outputs:
       - {name: spreadsheet_id, value_type: text}
       - {name: sheet_id, value_type: integer}

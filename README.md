@@ -8,7 +8,7 @@ Setup requires your own Google Cloud OAuth web application, enabled service APIs
 
 ## Connection model
 
-This is extension version 0.3.4. OAuth configuration and every authorization are project-scoped.
+This is extension version 0.3.5. OAuth configuration and every authorization are project-scoped.
 `google_gmail_account`, `google_drive_account`, and `google_sheets_account` are
 separate connections with separate tokens and grants. No default Google account exists:
 every workflow operation requires an explicit compatible connection.
@@ -177,3 +177,7 @@ transformation belongs to the tabular/data plane, not this extension.
 - [Security assessment requirements](https://support.google.com/cloud/answer/13465431)
 
 Logo sources and attribution: [BRANDING.md](BRANDING.md).
+
+## Workflow action guide
+
+See [Workflow actions](docs/workflow-actions.md) for connection setup, input formats, results and practical examples.

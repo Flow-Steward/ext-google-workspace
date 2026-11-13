@@ -23,67 +23,74 @@ actions:
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}]
     result_fields: [email_address, messages_total, threads_total, history_id]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, mailbox_unusable, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+    description: "Check that the selected Gmail account is authorized and reachable. Create and authorize a Gmail project connection, then select it for this step. Example: Verify authorization before running a Gmail intake workflow."
   - action_id: list_labels
     title: List Gmail labels
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}]
     result_fields: [labels]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_list_too_large, response_too_large, internal_error]
+    description: "List the Gmail account's labels so later steps can select the correct mailbox category. Create and authorize a Gmail project connection, then select it for this step. Example: Find INBOX and a processed label before searching or organizing messages."
   - action_id: search_messages
     title: Search Gmail messages
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: label_id, type: string, required: true}, {name: filters, type: object, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: label_id, type: string, required: true, description: "Select the Gmail label to search, such as INBOX."}, {name: filters, type: object, required: false, description: "JSON object using from, to, cc, subject, text, rfc_message_id, since/before (YYYY-MM-DD), read_state (any/read/unread), star_state (any/starred/unstarred), attachment_state (any/with_attachments/without_attachments)."}, {name: limit, type: integer, required: false, description: "Maximum number of results to return in this page."}, {name: cursor, type: string, required: false, description: "Leave empty for the first page. For later pages, map next_cursor returned by this search and keep the same connection, filters and page size."}]
     result_fields: [messages, next_cursor, truncated]
     error_codes: [invalid_payload, invalid_connection, invalid_cursor, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, response_too_large, internal_error]
+    description: "Search one Gmail label with typed filters and return message IDs and a next-page cursor. Create and authorize a Gmail project connection, then select it for this step. Example: Find unread invoices under INBOX with filters {\"subject\":\"invoice\",\"read_state\":\"unread\"}."
   - action_id: get_message
-    title: Get Gmail message
+    title: "Read Gmail message"
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: include_body, type: boolean, required: false}, {name: include_headers, type: boolean, required: false}, {name: include_attachment_metadata, type: boolean, required: false}, {name: include_raw_html, type: boolean, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: message_id, type: string, required: true, description: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header."}, {name: include_body, type: boolean, required: false, description: "Include the message body in the result for downstream text processing."}, {name: include_headers, type: boolean, required: false, description: "Include the message headers in the result."}, {name: include_attachment_metadata, type: boolean, required: false, description: "Include attachment identifiers, filenames and content types so a later download step can select a file."}, {name: include_raw_html, type: boolean, required: false, description: "Include the original HTML body when HTML content is needed by a later step."}]
     result_fields: [message]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, message_too_large, message_too_complex, response_too_large, internal_error]
+    description: "Read one Gmail message by its provider message ID, optionally returning body, headers and attachment metadata. Create and authorize a Gmail project connection, then select it for this step. Example: Read a message_id returned by Search Gmail messages and inspect its attachments."
   - action_id: get_attachment
-    title: Get Gmail attachment
+    title: "Download Gmail attachment"
     required_scopes: [extension:invoke, artifact:write]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_id, type: string, required: true}, {name: attachment_id, type: string, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: message_id, type: string, required: true, description: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header."}, {name: attachment_id, type: string, required: true, description: "Attachment ID from the selected message's attachment metadata. Use it with that same message_id."}]
     result_fields: [attachment_artifact_handle, attachment_metadata]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, attachment_not_found, attachment_too_large, attachment_type_disallowed, artifact_output_unavailable, response_too_large, internal_error]
+    description: "Download one Gmail attachment into a workflow file artifact for later steps. Create and authorize a Gmail project connection, then select it for this step. Example: Download a selected invoice attachment and pass the resulting artifact to document extraction."
   - action_id: set_message_flags
-    title: Set Gmail message flags
+    title: "Set Gmail read and starred flags"
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     command_type: invoke_extension_action
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: seen, type: boolean, required: false}, {name: flagged, type: boolean, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: message_ids, type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}, {name: seen, type: boolean, required: false, description: "Set true to mark messages read or false to mark them unread. Leave empty to preserve read state; provide at least one of seen or flagged."}, {name: flagged, type: boolean, required: false, description: "Set true to star messages or false to remove the star. Leave empty to preserve starred state; provide at least one of seen or flagged."}]
     result_fields: [results, external_effect_status, definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, timeout_unknown, internal_error]
+    description: "Change read and starred state for selected Gmail message IDs; omitted flags keep their current state. Create and authorize a Gmail project connection, then select it for this step. Example: Set seen=true after successful processing and leave flagged empty to preserve stars."
   - action_id: move_messages
-    title: Move Gmail messages
+    title: "Move Gmail messages between labels"
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     command_type: invoke_extension_action
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}, {name: source_label_id, type: string, required: true}, {name: target_label_id, type: string, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: message_ids, type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}, {name: source_label_id, type: string, required: true, description: "Select the label to remove from the chosen messages."}, {name: target_label_id, type: string, required: true, description: "Select the label to add to the chosen messages."}]
     result_fields: [results, external_effect_status, definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, label_not_found, label_ineligible, timeout_unknown, internal_error]
+    description: "Organize selected Gmail messages by removing a source label and adding a target label. Create and authorize a Gmail project connection, then select it for this step. Example: Remove an Inbox label and add a Processed label after downstream work succeeds."
   - action_id: delete_messages
     title: Move Gmail messages to Trash
     required_scopes: [extension:invoke]
@@ -92,27 +99,30 @@ actions:
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: message_ids, type: array, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: message_ids, type: array, required: true, description: "JSON array of Gmail provider message IDs returned by search."}]
     result_fields: [results, external_effect_status, definitely_no_external_effect]
     error_codes: [invalid_payload, invalid_connection, authorization_required, gmail_api_disabled, rate_limited, provider_unavailable, network_failure, message_not_found, timeout_unknown, internal_error]
+    description: "Move selected Gmail messages to Trash. Create and authorize a Gmail project connection, then select it for this step. Example: Move duplicate invoice messages to Trash after reviewing the selected message IDs."
   - action_id: search_drive_files
     title: Search Google Drive files
     required_scopes: [extension:invoke]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: parent_folder_id, type: string, required: false}, {name: name, type: string, required: false}, {name: name_match, type: string, required: false}, {name: mime_types, type: array, required: false}, {name: modified_after, type: string, required: false}, {name: modified_before, type: string, required: false}, {name: trashed, type: boolean, required: false}, {name: sort, type: string, required: false}, {name: limit, type: integer, required: false}, {name: cursor, type: string, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: parent_folder_id, type: string, required: false}, {name: name, type: string, required: false, description: "Filename to match using the chosen exact or contains mode."}, {name: name_match, type: string, required: false, description: "contains matches part of the filename; exact requires the full filename."}, {name: mime_types, type: array, required: false, description: "JSON array of MIME type strings used to restrict the search."}, {name: modified_after, type: string, required: false, description: "Return files modified after this RFC 3339 date and time, including a timezone."}, {name: modified_before, type: string, required: false, description: "Return files modified before this RFC 3339 date and time, including a timezone."}, {name: trashed, type: boolean, required: false, description: "False searches files outside Trash. True searches only trashed files."}, {name: sort, type: string, required: false, description: "provider_order keeps Drive order; name_asc sorts by filename; modified_time_desc returns newest modified first."}, {name: limit, type: integer, required: false, description: "Maximum number of results to return in this page."}, {name: cursor, type: string, required: false, description: "Leave empty for the first page. For later pages, map next_cursor returned by this search and keep the same connection, filters and page size."}]
     result_fields: [files, next_cursor]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, network_failure, provider_unavailable, response_too_large, internal_error]
+    description: "Search the app-visible Drive corpus with bounded typed filters and a filter-bound cursor. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Find PDF invoices in an app-authorized folder with mime_types=[\"application/pdf\"]."
   - action_id: download_drive_file
     title: Download Google Drive file
     required_scopes: [extension:invoke, artifact:write]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: file_id, type: string, required: true}, {name: export_mime_type, type: string, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: file_id, type: string, required: true}, {name: export_mime_type, type: string, required: false, description: "For a supported Google native file, explicitly select PDF or Excel export as appropriate. Leave empty for ordinary binary files."}]
     result_fields: [artifact_handle, filename, mime_type, size, sha256, file_id, modified_time]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_resource_not_available_to_connection, google_unsupported_export, drive_file_too_large, artifact_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+    description: "Stream one selected Drive file or explicit supported native export into an artifact grant. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Download a selected PDF, or export an app-authorized native document as PDF for extraction."
   - action_id: upload_drive_file
     title: Upload file to Google Drive
     required_scopes: [extension:invoke, artifact:read]
@@ -121,29 +131,32 @@ actions:
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: artifact_handle, type: artifact_handle, required: true}, {name: destination_folder_id, type: string, required: true}, {name: filename, type: string, required: true}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: artifact_handle, type: artifact_handle, required: true, description: "Map the file artifact handle returned by an earlier download or file-generation step. The file must be available to this workflow run."}, {name: destination_folder_id, type: string, required: true, description: "Select an app-authorized destination folder with Google Picker or map an authorized folder ID."}, {name: filename, type: string, required: true, description: "Filename for the uploaded artifact, including its extension."}]
     result_fields: [file_id, name, mime_type, size, web_view_link]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_resource_not_available_to_connection, google_write_incomplete, drive_file_too_large, artifact_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+    description: "Stream an owned artifact into one Picker-authorized Drive folder. Create and authorize a Google Drive project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Save a generated report artifact as daily-report.pdf in a Picker-authorized folder."
   - action_id: read_google_sheet
     title: Read Google Sheet
     required_scopes: [extension:invoke, artifact:write]
     handler: {mode: extension}
     mutates_platform: false
     workflow_visible: true
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: range, type: string, required: false}, {name: header_mode, type: string, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: range, type: string, required: false, description: "A1 range relative to the selected sheet, without a sheet prefix. Leave empty for the supported default read range."}, {name: header_mode, type: string, required: false, description: "first_row uses the first row as dataset field names; none reads rows without treating the first row as a header."}]
     result_fields: [dataset_handle, row_count, column_count, schema, preview, spreadsheet_id, sheet_id]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_output_unavailable, network_failure, provider_unavailable, response_too_large, internal_error]
+    description: "Stream one selected sheet range into a bounded NDJSON dataset grant. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Read A1:D100 on the Orders sheet with the first row used as field names."
   - action_id: write_google_sheet
-    title: Write Google Sheet
+    title: "Create or overwrite Google Sheet"
     required_scopes: [extension:invoke, artifact:read]
     handler: {mode: extension}
     command_type: invoke_extension_action
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: mode, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}, {name: start_cell, type: string, required: false}, {name: spreadsheet_title, type: string, required: false}, {name: destination_folder_id, type: string, required: false}, {name: spreadsheet_id, type: string, required: false}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: mode, type: string, required: true, description: "create makes a new spreadsheet; overwrite writes to the selected existing sheet starting at start_cell."}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false, description: "JSON array of row arrays, up to 100 rows and 100 cells per row. Cells may be strings, numbers, booleans or null. Supply this or dataset_handle, never both."}, {name: start_cell, type: string, required: false, description: "Single A1 cell relative to the selected sheet. Defaults to A1."}, {name: spreadsheet_title, type: string, required: false, description: "Name of the spreadsheet to create in create mode."}, {name: destination_folder_id, type: string, required: false, description: "Select an app-authorized destination folder with Google Picker or map an authorized folder ID."}, {name: spreadsheet_id, type: string, required: false}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}]
     result_fields: [spreadsheet_id, sheet_id, web_view_link, row_count, column_count]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+    description: "Create a spreadsheet or overwrite one selected sheet rectangle with RAW values. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Create a report spreadsheet from inline_rows=[[\"Order\",\"Total\"],[\"A-100\",42.5]], or overwrite a selected rectangle starting at A1."
   - action_id: append_google_sheet_rows
     title: Append Google Sheet rows
     required_scopes: [extension:invoke, artifact:read]
@@ -152,7 +165,8 @@ actions:
     mutates_platform: true
     workflow_visible: true
     test_mode_behavior: suppress
-    parameters: [{name: connection_ref, type: connection_ref, required: true}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: table_range, type: string, required: true}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false}]
+    parameters: [{name: connection_ref, type: connection_ref, required: true, description: "Select the saved project connection for this operation. Credentials belong in the connection, not in the step input."}, {name: spreadsheet_id, type: string, required: true}, {name: sheet_id, type: integer, required: false}, {name: sheet_title, type: string, required: false}, {name: table_range, type: string, required: true, description: "Relative A1 range identifying the logical table after which rows are appended."}, {name: dataset_handle, type: dataset_handle, required: false}, {name: inline_rows, type: array, required: false, description: "JSON array of row arrays, up to 100 rows and 100 cells per row. Cells may be strings, numbers, booleans or null. Supply this or dataset_handle, never both."}]
     contract: {serialization: {key_fields: [spreadsheet_id]}}
     result_fields: [spreadsheet_id, sheet_id, appended_range, row_count, column_count]
     error_codes: [invalid_payload, invalid_connection, google_scope_required, google_workspace_admin_approval_required, google_reauthorization_required, google_service_not_enabled, google_api_disabled, google_rate_limited, google_quota_exceeded, google_file_not_found, google_sheet_not_found, google_sheet_ambiguous, sheet_too_large, dataset_input_unavailable, network_failure, provider_unavailable, response_too_large, timeout_unknown, internal_error]
+    description: "Append RAW rows after one selected logical table using a stable chunk marker. Create and authorize a Google Sheets project connection, then select it for this step. Select existing files and folders with Google Picker so the app can access them. Example: Append processed order rows after the logical table in A:D without replacing its existing rows."

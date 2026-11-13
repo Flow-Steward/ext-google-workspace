@@ -3,22 +3,22 @@ forms:
   - {operation_id: list_labels, title: List Gmail labels, fields: []}
   - operation_id: search_messages
     title: Search Gmail messages
-    fields: [{name: label_id, widget_type: resource_picker, resource_query_id: gmail_labels, required: true}, {name: filters, widget_type: json}, {name: limit, widget_type: number}, {name: cursor, widget_type: text}]
+    fields: [{name: label_id, widget_type: resource_picker, resource_query_id: gmail_labels, required: true, help_text: "Select the Gmail label to search, such as INBOX.", label: "Label id"}, {name: filters, widget_type: json, help_text: "JSON object using from, to, cc, subject, text, rfc_message_id, since/before (YYYY-MM-DD), read_state (any/read/unread), star_state (any/starred/unstarred), attachment_state (any/with_attachments/without_attachments).", placeholder: "{\"subject\":\"invoice\",\"read_state\":\"unread\"}", label: "Filters"}, {name: limit, widget_type: number, help_text: "Maximum messages per page, from 1 to 200; defaults to 50.", label: "Limit"}, {name: cursor, widget_type: text, help_text: "Leave empty for the first page. For later pages, map next_cursor returned by this search and keep the same connection, filters and page size.", label: "Cursor"}]
   - operation_id: get_message
-    title: Get Gmail message
-    fields: [{name: message_id, widget_type: text, required: true}, {name: include_body, widget_type: boolean}, {name: include_headers, widget_type: boolean}, {name: include_attachment_metadata, widget_type: boolean}, {name: include_raw_html, widget_type: boolean}]
+    title: "Read Gmail message"
+    fields: [{name: message_id, widget_type: text, required: true, help_text: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header.", label: "Message id"}, {name: include_body, widget_type: boolean, help_text: "Include the message body in the result for downstream text processing.", label: "Include body"}, {name: include_headers, widget_type: boolean, help_text: "Include the message headers in the result.", label: "Include headers"}, {name: include_attachment_metadata, widget_type: boolean, help_text: "Include attachment identifiers, filenames and content types so a later download step can select a file.", label: "Include attachment metadata"}, {name: include_raw_html, widget_type: boolean, help_text: "Include the original HTML body when HTML content is needed by a later step.", label: "Include raw html"}]
   - operation_id: get_attachment
-    title: Get Gmail attachment
-    fields: [{name: message_id, widget_type: text, required: true}, {name: attachment_id, widget_type: text, required: true}]
+    title: "Download Gmail attachment"
+    fields: [{name: message_id, widget_type: text, required: true, help_text: "Gmail provider message ID returned by Search Gmail messages; this is not an email Message-ID header.", label: "Message id"}, {name: attachment_id, widget_type: text, required: true, help_text: "Attachment ID from the selected message's attachment metadata. Use it with that same message_id.", label: "Attachment id"}]
   - operation_id: set_message_flags
-    title: Set Gmail message flags
-    fields: [{name: message_ids, widget_type: json, required: true}, {name: seen, widget_type: boolean}, {name: flagged, widget_type: boolean}]
+    title: "Set Gmail read and starred flags"
+    fields: [{name: message_ids, widget_type: json, required: true, help_text: "JSON array of Gmail provider message IDs returned by search.", placeholder: "[\"<message_id from search>\"]", label: "Message ids"}, {name: seen, widget_type: boolean, help_text: "Set true to mark messages read or false to mark them unread. Leave empty to preserve read state; provide at least one of seen or flagged.", label: "Seen"}, {name: flagged, widget_type: boolean, help_text: "Set true to star messages or false to remove the star. Leave empty to preserve starred state; provide at least one of seen or flagged.", label: "Flagged"}]
   - operation_id: move_messages
-    title: Move Gmail messages
-    fields: [{name: message_ids, widget_type: json, required: true}, {name: source_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true}, {name: target_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true}]
+    title: "Move Gmail messages between labels"
+    fields: [{name: message_ids, widget_type: json, required: true, help_text: "JSON array of Gmail provider message IDs returned by search.", placeholder: "[\"<message_id from search>\"]", label: "Message ids"}, {name: source_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true, help_text: "Select the label to remove from the chosen messages.", label: "Source label id"}, {name: target_label_id, widget_type: resource_picker, resource_query_id: gmail_move_labels, required: true, help_text: "Select the label to add to the chosen messages.", label: "Target label id"}]
   - operation_id: delete_messages
     title: Move Gmail messages to Trash
-    fields: [{name: message_ids, widget_type: json, required: true}]
+    fields: [{name: message_ids, widget_type: json, required: true, help_text: "JSON array of Gmail provider message IDs returned by search.", placeholder: "[\"<message_id from search>\"]", label: "Message ids"}]
   - operation_id: search_drive_files
     title: Search Google Drive files
     fields:
@@ -43,14 +43,14 @@ forms:
             - {asset_ref: assets/google-picker-bridge.js}
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: parent_folder_id, required: true, max_length: 1024}]}
-      - {name: name, widget_type: text, label: Name contains}
-      - {name: name_match, widget_type: select, label: Name match, options: [{label: Contains, value: contains}, {label: Exact, value: exact}]}
-      - {name: mime_types, widget_type: json, label: MIME types}
-      - {name: modified_after, widget_type: datetime, label: Modified after}
-      - {name: modified_before, widget_type: datetime, label: Modified before}
-      - {name: trashed, widget_type: boolean, label: Include only trashed files}
-      - {name: sort, widget_type: select, label: Sort, options: [{label: Provider order, value: provider_order}, {label: Name ascending, value: name_asc}, {label: Modified newest first, value: modified_time_desc}]}
-      - {name: limit, widget_type: number, label: Limit}
+      - {name: name, widget_type: text, label: "Filename", help_text: "Filename to match using the chosen exact or contains mode.", placeholder: "invoice"}
+      - {name: name_match, widget_type: select, label: Name match, options: [{label: Contains, value: contains}, {label: Exact, value: exact}], help_text: "contains matches part of the filename; exact requires the full filename."}
+      - {name: mime_types, widget_type: json, label: MIME types, help_text: "JSON array of MIME type strings used to restrict the search.", placeholder: "[\"application/pdf\"]"}
+      - {name: modified_after, widget_type: datetime, label: Modified after, help_text: "Return files modified after this RFC 3339 date and time, including a timezone."}
+      - {name: modified_before, widget_type: datetime, label: Modified before, help_text: "Return files modified before this RFC 3339 date and time, including a timezone."}
+      - {name: trashed, widget_type: boolean, label: Include only trashed files, help_text: "False searches files outside Trash. True searches only trashed files."}
+      - {name: sort, widget_type: select, label: Sort, options: [{label: Provider order, value: provider_order}, {label: Name ascending, value: name_asc}, {label: Modified newest first, value: modified_time_desc}], help_text: "provider_order keeps Drive order; name_asc sorts by filename; modified_time_desc returns newest modified first."}
+      - {name: limit, widget_type: number, label: Limit, help_text: "Maximum files per page, from 1 to 100; defaults to 50."}
       - {name: cursor, widget_type: text, label: Cursor, help_text: Map only a cursor returned by this operation with the same filters.}
   - operation_id: download_drive_file
     title: Download Google Drive file
@@ -74,11 +74,11 @@ forms:
           scripts: *google_picker_scripts
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: file_id, required: true, max_length: 1024}]}
-      - {name: export_mime_type, widget_type: select, label: Native export format, options: [{label: PDF, value: application/pdf}, {label: Excel workbook, value: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet}]}
+      - {name: export_mime_type, widget_type: select, label: Native export format, options: [{label: PDF, value: application/pdf}, {label: Excel workbook, value: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet}], help_text: "For a supported Google native file, explicitly select PDF or Excel export as appropriate. Leave empty for ordinary binary files."}
   - operation_id: upload_drive_file
     title: Upload file to Google Drive
     fields:
-      - {name: artifact_handle, widget_type: artifact_picker, label: Input artifact (required), required: true}
+      - {name: artifact_handle, widget_type: artifact_picker, label: Input artifact (required), required: true, help_text: "Map the file artifact handle returned by an earlier download or file-generation step. The file must be available to this workflow run."}
       - name: destination_folder_id
         widget_type: resource_picker
         resource_query_id: google_drive_folders
@@ -98,7 +98,7 @@ forms:
           scripts: *google_picker_scripts
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: destination_folder_id, required: true, max_length: 1024}]}
-      - {name: filename, widget_type: text, label: Filename (required), required: true}
+      - {name: filename, widget_type: text, label: Filename (required), required: true, help_text: "Filename for the uploaded artifact, including its extension.", placeholder: "daily-report.pdf"}
   - operation_id: read_google_sheet
     title: Read Google Sheet
     fields:
@@ -123,16 +123,16 @@ forms:
           selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
       - {name: sheet_id, widget_type: number, label: Sheet ID, help_text: Enter exactly one of Sheet ID or Sheet title.}
       - {name: sheet_title, widget_type: text, label: Sheet title, help_text: Enter exactly one of Sheet ID or Sheet title.}
-      - {name: range, widget_type: text, label: Relative A1 range}
-      - {name: header_mode, widget_type: select, label: Header mode, options: [{label: First row, value: first_row}, {label: No header, value: none}]}
+      - {name: range, widget_type: text, label: Relative A1 range, help_text: "A1 range relative to the selected sheet, without a sheet prefix. Leave empty for the supported default read range.", placeholder: "A1:D100"}
+      - {name: header_mode, widget_type: select, label: Header mode, options: [{label: First row, value: first_row}, {label: No header, value: none}], help_text: "first_row uses the first row as dataset field names; none reads rows without treating the first row as a header."}
   - operation_id: write_google_sheet
-    title: Write Google Sheet
+    title: "Create or overwrite Google Sheet"
     fields:
-      - {name: mode, widget_type: select, label: Mode (required), required: true, options: [{label: Create spreadsheet, value: create}, {label: Overwrite selected sheet range, value: overwrite}]}
+      - {name: mode, widget_type: select, label: Mode (required), required: true, options: [{label: Create spreadsheet, value: create}, {label: Overwrite selected sheet range, value: overwrite}], help_text: "create makes a new spreadsheet; overwrite writes to the selected existing sheet starting at start_cell."}
       - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
-      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows.}
-      - {name: start_cell, widget_type: text, label: Start cell}
-      - {name: spreadsheet_title, widget_type: text, label: New spreadsheet title, depends_on: {mode: create}}
+      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows., placeholder: "[[\"Order\",\"Total\"],[\"A-100\",42.5]]"}
+      - {name: start_cell, widget_type: text, label: Start cell, help_text: "Single A1 cell relative to the selected sheet. Defaults to A1.", placeholder: "A1"}
+      - {name: spreadsheet_title, widget_type: text, label: New spreadsheet title, depends_on: {mode: create}, help_text: "Name of the spreadsheet to create in create mode.", placeholder: "Daily order report"}
       - name: destination_folder_id
         widget_type: resource_picker
         resource_query_id: google_drive_folders
@@ -151,6 +151,7 @@ forms:
           scripts: *google_picker_scripts
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: destination_folder_id, required: true, max_length: 1024}]}
+        help_text: "Select an app-authorized destination folder with Google Picker or map an authorized folder ID."
       - name: spreadsheet_id
         widget_type: resource_picker
         resource_query_id: google_spreadsheets
@@ -169,8 +170,9 @@ forms:
           scripts: *google_picker_scripts
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
-      - {name: sheet_id, widget_type: number, label: Sheet ID, depends_on: {mode: overwrite}}
-      - {name: sheet_title, widget_type: text, label: Sheet title, depends_on: {mode: overwrite}}
+        help_text: "Select an app-authorized spreadsheet with Google Picker or map its ID; use this for overwrite or append operations."
+      - {name: sheet_id, widget_type: number, label: Sheet ID, depends_on: {mode: overwrite}, help_text: "Numeric sheet tab ID, zero or greater. Provide exactly one of sheet_id or sheet_title for an existing sheet."}
+      - {name: sheet_title, widget_type: text, label: Sheet title, depends_on: {mode: overwrite}, help_text: "Exact sheet tab title. Provide exactly one of sheet_title or sheet_id for an existing sheet."}
   - operation_id: append_google_sheet_rows
     title: Append Google Sheet rows
     fields:
@@ -192,8 +194,9 @@ forms:
           scripts: *google_picker_scripts
           target_component_id: workflow_parameter_form
           selection: {maximum: 1, fields: [{source: id, target: spreadsheet_id, required: true, max_length: 1024}]}
+        help_text: "Select an app-authorized spreadsheet with Google Picker or map its ID; use this for overwrite or append operations."
       - {name: sheet_id, widget_type: number, label: Sheet ID, help_text: Enter exactly one of Sheet ID or Sheet title.}
       - {name: sheet_title, widget_type: text, label: Sheet title, help_text: Enter exactly one of Sheet ID or Sheet title.}
-      - {name: table_range, widget_type: text, label: Table range (required), required: true}
+      - {name: table_range, widget_type: text, label: Table range (required), required: true, help_text: "Relative A1 range identifying the logical table after which rows are appended.", placeholder: "A:D"}
       - {name: dataset_handle, widget_type: dataset_picker, label: Input dataset, help_text: Choose exactly one input dataset or inline rows.}
-      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows.}
+      - {name: inline_rows, widget_type: json, label: Inline rows, help_text: Choose exactly one input dataset or inline rows; maximum 100 rows., placeholder: "[[\"Order\",\"Total\"],[\"A-100\",42.5]]"}
