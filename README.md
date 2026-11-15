@@ -8,7 +8,7 @@ Setup requires your own Google Cloud OAuth web application, enabled service APIs
 
 ## Connection model
 
-This is extension version 0.3.5. OAuth configuration and every authorization are project-scoped.
+This is extension version 0.3.6. OAuth configuration and every authorization are project-scoped.
 `google_gmail_account`, `google_drive_account`, and `google_sheets_account` are
 separate connections with separate tokens and grants. No default Google account exists:
 every workflow operation requires an explicit compatible connection.

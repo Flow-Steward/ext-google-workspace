@@ -4,3 +4,4 @@ pages:
   - ref: pages/gmail.yaml
   - ref: pages/drive.yaml
   - ref: pages/sheets.yaml
+  - ref: pages/support.yaml

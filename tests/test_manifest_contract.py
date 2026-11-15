@@ -344,6 +344,7 @@ def test_setup_guide_is_the_default_google_workspace_page() -> None:
         {"ref": "pages/gmail.yaml"},
         {"ref": "pages/drive.yaml"},
         {"ref": "pages/sheets.yaml"},
+        {"ref": "pages/support.yaml"},
     ]
 
 
@@ -396,7 +397,7 @@ def test_drive_and_sheets_static_contracts_publish_exact_boundaries() -> None:
         "maximum_seconds": 3600,
         "headroom_seconds": 30,
     }
-    assert manifest["version"] == "0.3.5"
+    assert manifest["version"] == "0.3.6"
     assert set(manifest["required_scopes"]) == {
         "extension:invoke",
         "artifact:read",
@@ -580,8 +581,8 @@ def test_workspace_ui_has_exact_service_tabs_and_operator_guidance() -> None:
     page_refs = [row["ref"] for row in ui_manifest["pages"]]
     pages = [_yaml(f"ui/{ref}") for ref in page_refs]
 
-    assert [page["page_id"] for page in pages] == ["setup-guide", "gmail", "drive", "sheets"]
-    assert [page["title"] for page in pages] == ["Setup guide", "Gmail", "Drive", "Sheets"]
+    assert [page["page_id"] for page in pages] == ["setup-guide", "gmail", "drive", "sheets", "support"]
+    assert [page["title"] for page in pages] == ["Setup guide", "Gmail", "Drive", "Sheets", "Support"]
     combined = "\n".join(
         str(component.get("body") or "")
         for page in pages
